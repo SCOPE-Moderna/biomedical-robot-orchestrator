@@ -1,0 +1,37 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node-RED Nodes
+
+on:
+  push:
+    paths: [ "nodes/**", ".github/workflows/nodes.yaml" ]
+#  pull_request:
+#    branches: [ "main" ]
+
+jobs:
+  build:
+    # Use the Pi
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yarn packages
+        run: | 
+          cd nodes
+          yarn
+
+      - name: Lint & Compile TypeScript
+        run: | 
+          cd nodes
+          yarn lint
+          yarn compile
+
+      - name: Copy the nodes to the Node-RED user directory
+        run: | 
+          rm -rf /home/aquarium/nodes-from-git-repo/nodes
+          cp -r nodes/ /home/aquarium/nodes-from-git-repo/nodes
+
+      - name: Restart Node-RED
+        run: sudo systemctl restart nodered.service
