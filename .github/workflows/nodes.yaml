@@ -5,7 +5,7 @@ name: Node-RED Nodes
 
 on:
   push:
-    paths: [ "nodes/**" ]
+    paths: [ "nodes/**", ".github/workflows/nodes.yaml" ]
 #  pull_request:
 #    branches: [ "main" ]
 
