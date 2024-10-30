@@ -31,6 +31,7 @@ jobs:
       - name: Copy the nodes to the Node-RED user directory
         run: | 
           rm -rf /home/aquarium/nodes-from-git-repo/nodes
+          mkdir /home/aquarium/nodes-from-git-repo/nodes
           cp -r nodes/ /home/aquarium/nodes-from-github/nodes
 
       - name: Restart Node-RED
