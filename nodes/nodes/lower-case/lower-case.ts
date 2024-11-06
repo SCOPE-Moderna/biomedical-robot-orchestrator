@@ -7,7 +7,7 @@ module.exports = function (RED: NodeAPI) {
     RED.nodes.createNode(this, config);
 
     this.on("input", function (msg: NodeMessage, send, done) {
-      msg.payload = (msg.payload as string).toLowerCase();
+      msg.payload = (msg.payload as string).toLowerCase() + "!!!";
       send(msg);
       done();
     });
