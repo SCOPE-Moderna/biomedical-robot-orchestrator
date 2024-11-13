@@ -17,7 +17,7 @@ module.exports = function (RED: NodeAPI) {
     this.on("input", async function (msg: NodeMessage, send, done) {
       const payload = (msg.payload as string | number).toString();
       const response: PingResponse = await service.ping({ message: payload });
-      send([{payload: response.success}, {payload: response.message}]);
+      send([{ payload: response.success }, { payload: response.message }]);
       done();
     });
   }
