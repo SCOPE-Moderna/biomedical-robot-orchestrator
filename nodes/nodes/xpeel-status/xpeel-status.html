@@ -1,13 +1,13 @@
 <script type="text/javascript">
   RED.nodes.registerType("xpeel-status", {
-    category: "instruments: xpeel",
-    color: "#CA9258",
+    category: "xpeel",
+    color: "#40E0D0",
     defaults: {
-      name: { value: "" },
+      name: { value: "XPeel Status" },
     },
     inputs: 1,
     outputs: 1,
-    icon: "file.svg",
+    icon: "feed.svg",
     label: function () {
       return this.name || "XPeel: Status";
     },
