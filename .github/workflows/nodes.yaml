@@ -26,8 +26,8 @@ jobs:
         run: | 
           cd nodes
           yarn lint
-          yarn compile
           yarn protos
+          yarn compile
 
       - name: Copy the nodes to the Node-RED user directory
         run: | 
