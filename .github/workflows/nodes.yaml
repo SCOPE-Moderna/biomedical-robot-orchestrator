@@ -22,10 +22,11 @@ jobs:
           cd nodes
           yarn
 
-      - name: Lint & Compile TypeScript
+      - name: Lint & Compile TypeScript, Protos
         run: | 
           cd nodes
           yarn lint
+          yarn protos
           yarn compile
 
       - name: Copy the nodes to the Node-RED user directory

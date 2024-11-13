@@ -1,20 +1,28 @@
 {
   "name": "nodes",
-  "packageManager": "yarn@4.5.1",
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
   "node-red": {
     "nodes": {
-      "lower-case": "nodes/lower-case/lower-case.js"
+      "lower-case": "nodes/lower-case/lower-case.js",
+      "grpc-ping": "nodes/grpc-ping/grpc-ping.js"
     }
   },
   "devDependencies": {
+    "@types/google-protobuf": "^3.15.12",
     "@types/node": "^22.7.5",
     "@types/node-red": "^1.3.5",
     "prettier": "^3.3.3",
+    "protoc-gen-ts": "^0.8.7",
     "typescript": "^5.6.3"
   },
   "scripts": {
     "format": "prettier --write nodes --ignore-path .gitignore",
     "lint": "prettier --check nodes --ignore-path .gitignore",
-    "compile": "tsc -p ."
+    "compile": "tsc -p .",
+    "protos": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -Iservice_pb2=../protos --ts_opt=esModuleInterop=true --ts_out=. ../protos/service.proto"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.2",
+    "google-protobuf": "^3.21.4"
   }
 }
