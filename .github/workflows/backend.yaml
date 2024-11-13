@@ -17,6 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Stop python backend service
+        run: sudo systemctl stop python-backend.service
+
       - name: Create python backend, install dependencies, make protos
         run: |
           cd backend
@@ -26,8 +29,8 @@ jobs:
           make protos
           deactivate
 
-      - name: Update python backend code, restart service
+      - name: Update python backend code, start service
         run: |
           rm -rf /home/aquarium/nodes-from-git-repo/backend
           cp -r backend/ /home/aquarium/nodes-from-git-repo/backend
-          sudo systemctl restart python-backend.service
+          sudo systemctl start python-backend.service
