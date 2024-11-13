@@ -1,8 +1,7 @@
 import logging
 from concurrent import futures
 import grpc
-from node_connector_pb2 import node_connector_pb2, node_connector_pb2_grpc, xpeel_pb2
-
+from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 
 class NodeConnector(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
