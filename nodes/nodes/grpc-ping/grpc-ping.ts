@@ -3,7 +3,7 @@ import {
   NodeConnectorClient,
   PingRequest,
   PingResponse,
-} from "../../service_pb2/service";
+} from "../../node_connector_pb2/service";
 import * as grpc from "@grpc/grpc-js";
 
 interface TestNodeDef extends NodeDef {}

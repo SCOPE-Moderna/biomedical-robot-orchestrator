@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "xpeel.proto";
+
+message PingRequest {
+  string message = 1;
+}
+
+message PingResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Empty {}
+
+service NodeConnector {
+  rpc Ping (PingRequest) returns (PingResponse) {}
+
+  // XPeel
+  rpc XPeelStatus (Empty) returns (XPeelStatusResponse) {}
+  rpc XPeelReset (Empty) returns (XPeelStatusResponse) {}
+  rpc XPeelXPeel (XPeelXPeelRequest) returns (XPeelStatusResponse) {}
+  rpc XPeelSealCheck (Empty) returns (XPeelSealCheckResponse) {}
+  rpc XPeelTapeRemaining (Empty) returns (XPeelTapeRemainingResponse) {}
+}
