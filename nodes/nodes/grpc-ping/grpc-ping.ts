@@ -1,5 +1,5 @@
 import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
-import { NodeConnectorClient, PingResponse } from "../../service_pb2/service";
+import {NodeConnectorClient, PingRequest, PingResponse} from "../../service_pb2/service";
 import * as grpc from "@grpc/grpc-js";
 
 interface TestNodeDef extends NodeDef {}
@@ -16,9 +16,14 @@ module.exports = function (RED: NodeAPI) {
 
     this.on("input", async function (msg: NodeMessage, send, done) {
       const payload = (msg.payload as string | number).toString();
-      const response: PingResponse = await service.ping({ message: payload });
-      send([{ payload: response.success }, { payload: response.message }]);
-      done();
+      const pingRequest = new PingRequest({message: payload})
+      service.Ping(pingRequest, (error, response) => {
+        if(error) {
+          console.log(error);
+        }
+        send([{ payload: response.success }, { payload: response.message }]);
+        done();
+      });
     });
   }
 
