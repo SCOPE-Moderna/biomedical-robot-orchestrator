@@ -161,5 +161,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-service_pb2/
-!service_pb2/*.md
+node_connector_pb2/
+!node_connector_pb2/*.md

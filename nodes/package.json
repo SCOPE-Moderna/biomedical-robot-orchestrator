@@ -4,7 +4,8 @@
   "node-red": {
     "nodes": {
       "lower-case": "nodes/lower-case/lower-case.js",
-      "grpc-ping": "nodes/grpc-ping/grpc-ping.js"
+      "grpc-ping": "nodes/grpc-ping/grpc-ping.js",
+      "xpeel-status": "nodes/xpeel-status/xpeel-status.js"
     }
   },
   "devDependencies": {
@@ -19,7 +20,7 @@
     "format": "prettier --write nodes --ignore-path .gitignore",
     "lint": "prettier --check nodes --ignore-path .gitignore",
     "compile": "tsc -p .",
-    "protos": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -Iservice_pb2=../protos --ts_opt=esModuleInterop=true --ts_out=. ../protos/service.proto"
+    "protos": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_out=./node_connector_pb2 ../protos/node_connector.proto"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.2",

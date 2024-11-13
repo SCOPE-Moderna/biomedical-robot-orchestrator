@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+message XPeelStatusResponse {
+  int32 error_code_1 = 1;
+  int32 error_code_2 = 2;
+  int32 error_code_3 = 3;
+}
+
+message XPeelXPeelRequest {
+  // "A" parameter from the XPeel manual.
+  // +------------+-----------------------+-------+
+  // | Set Number | Begin Peel Location   | Speed |
+  // +------------+-----------------------+-------+
+  // | Set 1      | Default -2 mm         | fast  |
+  // | Set 2      | Default -2 mm         | slow  |
+  // | Set 3      | Default               | fast  |
+  // | Set 4      | Default               | slow  |
+  // | Set 5      | Default +2 mm         | fast  |
+  // | Set 6      | Default +2 mm         | slow  |
+  // | Set 7      | Default +4 mm         | fast  |
+  // | Set 8      | Default +4 mm         | slow  |
+  // | Set 9      | custom                | custom|
+  // +------------+-----------------------+-------+
+  int32 set_number = 1;
+  // "B" parameter from the XPeel manual. Adhere time.
+  // 1 = 2.5 seconds
+  // 2 = 5 seconds
+  // 3 = 7.5 seconds
+  // 4 = 10 seconds
+  int32 adhere_time = 2;
+}
+
+message XPeelSealCheckResponse {
+  bool seal_detected = 1;
+}
+
+message XPeelTapeRemainingResponse {
+  // Number of “deseals” remaining on the supply spool
+  int32 deseals_remaining = 1;
+  // Number of “deseals” that can be held on the space remaining on the take-up spool
+  int32 take_up_spool_space_remaining = 2;
+}
