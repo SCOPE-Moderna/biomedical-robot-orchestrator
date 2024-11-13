@@ -1,5 +1,5 @@
 import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
-import {NodeConnectorClient, PingResponse} from "../../service_pb2/service";
+import { NodeConnectorClient, PingResponse } from "../../service_pb2/service";
 import * as grpc from "@grpc/grpc-js";
 
 interface TestNodeDef extends NodeDef {}

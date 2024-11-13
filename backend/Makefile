@@ -4,5 +4,4 @@ protos:
 		--python_out=. \
 		--pyi_out=. \
 		--grpc_python_out=. \
-		--js_out=import_style=commonjs,binary:./ \
 		../protos/service.proto
