@@ -4,7 +4,8 @@
   "node-red": {
     "nodes": {
       "lower-case": "nodes/lower-case/lower-case.js",
-      "grpc-ping": "nodes/grpc-ping/grpc-ping.js"
+      "grpc-ping": "nodes/grpc-ping/grpc-ping.js",
+      "xpeel-status": "nodes/xpeel-status/xpeel-status.js"
     }
   },
   "devDependencies": {
