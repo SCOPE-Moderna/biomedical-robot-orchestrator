@@ -13,10 +13,38 @@ class deviceConnection:
         self.sock_conn.sendall(data)
 
     def recv(self):
-        while True:
-            data = self.sock_conn.recv(1024)
-            if not data: break
-            print(data.decode())
+        data = self.sock_conn.recv(1024).decode().strip()
+        if len(data) == 0: pass
+        else: return data
+        
+    def waive_ack(self):
+        while(True):
+            data = self.recv()
+            if data[1:4] == 'ack': pass
+            else: return data
+
+    def status(self):
+        self.send("*stat\r\n".encode())
+        return self.recv()
+    
+    def reset(self):
+        self.send("*reset\r\n".encode())
+        return self.waive_ack()
+    
+    def seal_check(self):
+        self.send("*sealcheck\r\n".encode())
+        return self.waive_ack()
+    
+    def tape_remaining(self):
+        self.send("*tapeleft\r\n".encode())
+        while(True):
+            data = self.recv()
+            if data[1:6] == 'ready' or data[1:4] == 'ack': pass
+            else: return data
+
+    def peel(self, param, adhere):
+        self.send(f"*xpeel:{param}{adhere}\r\n".encode())
+        return self.waive_ack()
     
     def disconnect(self):
         self.sock_conn.close()
@@ -24,10 +52,8 @@ class deviceConnection:
 def main():
     xpeel = deviceConnection("192.168.0.201", 1628)
     print("device connection class created.")
-    xpeel.send("*stat\r\n".encode())
-    print('test message sent.')
-    data = xpeel.sock_conn.recv(1024)
-    print(f"Recieved {data.decode()} from xpeel")
+    data = xpeel.tape_remaining()
+    print(f"Recieved {data} from xpeel")
     xpeel.disconnect()
     print('connection closed.')
 
