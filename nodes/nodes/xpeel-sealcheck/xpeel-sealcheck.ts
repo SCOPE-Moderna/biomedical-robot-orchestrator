@@ -14,7 +14,10 @@ const service = new NodeConnectorClient(
 );
 
 module.exports = function (RED: NodeAPI) {
-  function XPeelSealCheckNodeConstructor(this: Node, config: TestNodeDef): void {
+  function XPeelSealCheckNodeConstructor(
+    this: Node,
+    config: TestNodeDef,
+  ): void {
     RED.nodes.createNode(this, config);
 
     this.on("input", async function (msg: NodeMessage, send, done) {
@@ -26,7 +29,7 @@ module.exports = function (RED: NodeAPI) {
         send([
           {
             payload: {
-              seal_detected: response.seal_detected
+              seal_detected: response.seal_detected,
             },
           },
         ]);
