@@ -1,0 +1,32 @@
+<script type="text/javascript">
+  RED.nodes.registerType("xpeel-reset", {
+    category: "xpeel",
+    color: "#40E0D0",
+    defaults: {
+      name: { value: "XPeel Reset" },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "feed.svg",
+    label: function () {
+      return this.name || "XPeel: Reset";
+    },
+    paletteLabel: "XPeel: Reset",
+  });
+</script>
+
+<script type="text/html" data-template-name="xpeel-reset">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="xpeel-reset">
+  <p>
+    Reset the XPeel. The ‘reset’ command causes the spool to advance a few
+    inches to fresh tape, and the elevator and conveyor axes to return to the
+    home and ready for plate pick up position. Variables like error codes and
+    tape remaining will be preserved.
+  </p>
+</script>
