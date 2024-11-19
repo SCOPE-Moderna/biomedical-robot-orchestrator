@@ -4,9 +4,9 @@ class deviceConnection:
     def __init__(self, addr, port):
         self.addr = addr
         self.port = port
-
         self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock_conn.connect((addr, port))
+        self.queue = bytearray()
         print(f"Connected on {addr}:{port}!")
 
     def send(self, data):
@@ -17,10 +17,17 @@ class deviceConnection:
         if len(data) == 0: pass
         else: return data
         
+    def queue_put(self):
+        pass
+
+    def queue_get(self):
+        pass
+
     def waive_ack(self):
         while(True):
             data = self.recv()
-            if data[1:4] == 'ack': pass
+            if data is None: pass
+            elif data[1:4] == 'ack': pass
             else: return data
 
     def status(self):
@@ -37,10 +44,11 @@ class deviceConnection:
     
     def tape_remaining(self):
         self.send("*tapeleft\r\n".encode())
+        print("sent tape cmd")
         while(True):
             data = self.recv()
-            if data[1:6] == 'ready' or data[1:4] == 'ack': pass
-            else: return data
+            if 'tape' in data[1:5]: return data
+            else: print(data)
 
     def peel(self, param, adhere):
         self.send(f"*xpeel:{param}{adhere}\r\n".encode())
