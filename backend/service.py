@@ -2,30 +2,36 @@ import logging
 from concurrent import futures
 import grpc
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
+from xpeel import XPeel
+
+xpeel = XPeel("192.168.0.201", 1628)
 
 class NodeConnector(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
         return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
 
     def XPeelStatus(self, request, context):
+        msg = xpeel.status()
         return xpeel_pb2.XPeelStatusResponse(
-            error_code_1=00,
-            error_code_2=00,
-            error_code_3=00,
+            error_code_1=msg.payload[0],
+            error_code_2=msg.payload[1],
+            error_code_3=msg.payload[2],
         )
 
     def XPeelReset(self, request, context):
+        msg = xpeel.status()
         return xpeel_pb2.XPeelStatusResponse(
-            error_code_1=10,
-            error_code_2=20,
-            error_code_3=30,
+            error_code_1=msg.payload[0],
+            error_code_2=msg.payload[1],
+            error_code_3=msg.payload[2],
         )
 
     def XPeelXPeel(self, request, context):
+        msg = xpeel.status()
         return xpeel_pb2.XPeelStatusResponse(
-            error_code_1=40,
-            error_code_2=50,
-            error_code_3=60,
+            error_code_1=msg.payload[0],
+            error_code_2=msg.payload[1],
+            error_code_3=msg.payload[2],
         )
 
     def XPeelSealCheck(self, request, context):
