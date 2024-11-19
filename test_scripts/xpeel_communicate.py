@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 import socket
+from queue import SimpleQueue
+
 
 class deviceConnection:
     def __init__(self, addr, port):
@@ -6,17 +10,27 @@ class deviceConnection:
         self.port = port
         self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock_conn.connect((addr, port))
-        self.queue = bytearray()
+        self.recv_queue = SimpleQueue()
         print(f"Connected on {addr}:{port}!")
 
-    def send(self, data):
-        self.sock_conn.sendall(data)
+    def send(self, data: str):
+        self.sock_conn.sendall((data + "\r\n").encode())
 
-    def recv(self):
-        data = self.sock_conn.recv(1024).decode().strip()
-        if len(data) == 0: pass
-        else: return data
-        
+    def recv(self) -> str | None:
+        if self.recv_queue.qsize() > 0:
+            return self.recv_queue.get()
+
+        data = self.sock_conn.recv(1024).decode()
+        if len(data) == 0:
+            return
+
+        # split data into list of strings
+        msgs = data.split("\r\n")
+        for msg in msgs:
+            self.recv_queue.put(msg.strip())
+
+        return self.recv_queue.get()
+
     def queue_put(self):
         pass
 
@@ -24,38 +38,40 @@ class deviceConnection:
         pass
 
     def waive_ack(self):
-        while(True):
-            data = self.recv()
-            if data is None: pass
-            elif data[1:4] == 'ack': pass
-            else: return data
+        while True:
+            msg = self.recv()
+            if msg is None or msg[1:4] == "ack":
+                continue
+
+            return msg
 
     def status(self):
-        self.send("*stat\r\n".encode())
+        self.send("*stat")
         return self.recv()
-    
+
     def reset(self):
-        self.send("*reset\r\n".encode())
+        self.send("*reset")
         return self.waive_ack()
-    
+
     def seal_check(self):
-        self.send("*sealcheck\r\n".encode())
+        self.send("*sealcheck")
         return self.waive_ack()
-    
+
     def tape_remaining(self):
-        self.send("*tapeleft\r\n".encode())
+        self.send("*tapeleft")
         print("sent tape cmd")
-        while(True):
-            data = self.recv()
-            if 'tape' in data[1:5]: return data
-            else: print(data)
+        while True:
+            msg = self.recv()
+            if 'tape' in msg[1:5]:
+                return msg
 
     def peel(self, param, adhere):
-        self.send(f"*xpeel:{param}{adhere}\r\n".encode())
+        self.send(f"*xpeel:{param}{adhere}")
         return self.waive_ack()
-    
+
     def disconnect(self):
         self.sock_conn.close()
+
 
 def main():
     xpeel = deviceConnection("192.168.0.201", 1628)
@@ -64,5 +80,6 @@ def main():
     print(f"Recieved {data} from xpeel")
     xpeel.disconnect()
     print('connection closed.')
+
 
 main()
