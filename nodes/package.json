@@ -7,7 +7,9 @@
       "grpc-ping": "nodes/grpc-ping/grpc-ping.js",
       "xpeel-status": "nodes/xpeel-status/xpeel-status.js",
       "xpeel-reset": "nodes/xpeel-reset/xpeel-reset.js",
-      "xpeel-xpeel": "nodes/xpeel-xpeel/xpeel-xpeel.js"
+      "xpeel-xpeel": "nodes/xpeel-xpeel/xpeel-xpeel.js",
+      "xpeel-sealcheck": "nodes/xpeel-sealcheck/xpeel-sealcheck.js",
+      "xpeel-taperemaining": "nodes/xpeel-taperemaining/xpeel-taperemaining.js"
     }
   },
   "devDependencies": {
