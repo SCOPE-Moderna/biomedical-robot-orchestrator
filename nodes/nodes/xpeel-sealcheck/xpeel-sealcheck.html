@@ -1,0 +1,37 @@
+<script type="text/javascript">
+  RED.nodes.registerType("xpeel-sealcheck", {
+    category: "xpeel",
+    color: "#40E0D0",
+    defaults: {
+      name: { value: "XPeel Seal Check" },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "feed.svg",
+    label: function () {
+      return this.name || "XPeel: Seal Check";
+    },
+    paletteLabel: "XPeel: Seal Check",
+  });
+</script>
+
+<script type="text/html" data-template-name="xpeel-sealcheck">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="xpeel-sealcheck">
+  <p>
+    The ‘sealcheck’ command causes the conveyor to place the plate under the
+    reflective seal detection sensor and the elevator to move down to the proper
+    sensing elevation. The sensor status is then recorded. The elevator and
+    conveyor axes then return to the home and ready for plate pick up position.
+    Since this action only checks the plate at one location, a better indicator
+    is the error code that will be generated during a normal desealing operation
+    where the plate is scanned over most of its length. The ‘sealcheck’ command
+    is useful, however, to verify that the sensor parameters are set correctly
+    to detect a particular seal type.
+  </p>
+</script>

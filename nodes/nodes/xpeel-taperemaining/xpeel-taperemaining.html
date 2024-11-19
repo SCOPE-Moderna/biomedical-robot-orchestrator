@@ -1,0 +1,45 @@
+<script type="text/javascript">
+  RED.nodes.registerType("xpeel-taperemaining", {
+    category: "xpeel",
+    color: "#40E0D0",
+    defaults: {
+      name: { value: "XPeel Tape Remaining" },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "feed.svg",
+    label: function () {
+      return this.name || "XPeel: Tape Remaining";
+    },
+    paletteLabel: "XPeel: Tape Remaining",
+  });
+</script>
+
+<script type="text/html" data-template-name="xpeel-taperemaining">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="xpeel-taperemaining">
+  <p>
+    The Automated Plate Seal Remover calculates the amount of tape remaining on
+    the supply spool by comparing the travel of the conveyor to the rotation of
+    both the supply and take-up spools. After a completed ‘XPeel’ operation,
+    this command can be issued to verify the amount of tape left as well as the
+    space remaining on the take-up spool. These calculations are not perfectly
+    accurate but they will provide sufficient warning to avoid running out of
+    tape unexpectedly.
+  </p>
+  <h1>Output</h1>
+  <h2>Payload</h2>
+  <p>
+    <code>deseals_remaining</code> - The numnber of deseals remaining on the
+    tape roll.
+  </p>
+  <p>
+    <code>take_up_spool_space_remaining</code> - Number of “deseals” that can be
+    held on the space remaining on the take-up spool.
+  </p>
+</script>
