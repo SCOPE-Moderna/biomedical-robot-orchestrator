@@ -7,7 +7,7 @@ from queue import SimpleQueue
 class XPeelMessage:
     def __init__(self, msg):
         self.raw_msg = msg
-        self.type, self.raw_payload = msg[1:].split(":")[0]
+        self.type, self.raw_payload = msg[1:].split(":")
         self.payload = self.raw_payload.split(",")
 
     def __repr__(self):
