@@ -68,11 +68,11 @@ class XPeel:
 
     def reset(self) -> XPeelMessage:
         self.send("*reset")
-        return XPeelMessage(self.wait_for_type("ready"))
+        return self.wait_for_type("ready")
 
     def seal_check(self) -> XPeelMessage:
         self.send("*sealcheck")
-        return XPeelMessage(self.wait_for_type("ready"))
+        return self.wait_for_type("ready")
 
     def tape_remaining(self) -> XPeelMessage:
         self.send("*tapeleft")
@@ -80,13 +80,11 @@ class XPeel:
         while True:
             msg = XPeelMessage(self.recv())
             if msg.type == "tape":
-                # dump next item in queue - it will be a "ready" message
-                self.recv()
-                return XPeelMessage(msg)
+                return self.wait_for_type("tape")
 
     def peel(self, param, adhere) -> XPeelMessage:
         self.send(f"*xpeel:{param}{adhere}")
-        return XPeelMessage(self.wait_for_type("ready"))
+        return self.wait_for_type("ready")
 
     def disconnect(self):
         self.sock_conn.close()
