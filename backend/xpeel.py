@@ -64,7 +64,7 @@ class XPeel:
 
     def status(self) -> XPeelMessage:
         self.send("*stat")
-        return XPeelMessage(self.recv())
+        return self.wait_for_type("ready")
 
     def reset(self) -> XPeelMessage:
         self.send("*reset")
