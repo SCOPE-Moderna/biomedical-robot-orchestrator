@@ -8,8 +8,12 @@ from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 class XPeelMessage:
     def __init__(self, msg):
         self.raw_msg: str = msg
-        self.type, self.raw_payload = msg[1:].split(":")
-        self.payload: list[str] = self.raw_payload.split(",")
+        split_msg = msg[1:].split(":")
+        self.type = split_msg[0]
+
+        if len(split_msg) == 2:
+            self.raw_payload = split_msg[1]
+            self.payload: list[str] = self.raw_payload.split(",")
 
     def to_xpeel_status_response(self) -> XPeelStatusResponse | None:
         if self.type != "ready":
