@@ -33,19 +33,31 @@ class XPeel:
     def __init__(self, addr, port):
         self.addr = addr
         self.port = port
-        self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock_conn.connect((addr, port))
+        self._connect()
         self.recv_queue = SimpleQueue()
         print(f"Connected on {addr}:{port}!")
 
+    def _connect(self):
+        self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock_conn.connect((self.addr, self.port))
+
     def send(self, data: str):
-        self.sock_conn.sendall((data + "\r\n").encode())
+        try:
+            self.sock_conn.sendall((data + "\r\n").encode())
+        except BrokenPipeError:
+            self._connect()
+            self.send(data)
 
     def recv(self) -> str | None:
         if self.recv_queue.qsize() > 0:
             return self.recv_queue.get()
 
-        data = self.sock_conn.recv(1024).decode()
+        try:
+            data = self.sock_conn.recv(1024).decode()
+        except BrokenPipeError:
+            self._connect()
+            return self.recv()
+        
         if len(data) == 0:
             return
 
