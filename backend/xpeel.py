@@ -76,11 +76,7 @@ class XPeel:
 
     def tape_remaining(self) -> XPeelMessage:
         self.send("*tapeleft")
-        print("sent tape cmd")
-        while True:
-            msg = XPeelMessage(self.recv())
-            if msg.type == "tape":
-                return self.wait_for_type("tape")
+        self.wait_for_type("tape")
 
     def peel(self, param, adhere) -> XPeelMessage:
         self.send(f"*xpeel:{param}{adhere}")
