@@ -2,15 +2,26 @@ from __future__ import annotations
 
 import socket
 from queue import SimpleQueue
+from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
 
 class XPeelMessage:
     def __init__(self, msg):
-        self.raw_msg = msg
+        self.raw_msg: str = msg
         self.type, self.raw_payload = msg[1:].split(":")
-        self.payload = self.raw_payload.split(",")
+        self.payload: list[str] = self.raw_payload.split(",")
 
-    def __repr__(self):
+    def to_xpeel_status_response(self) -> XPeelStatusResponse | None:
+        if self.type != "ready":
+            return None
+        int_payload = [int(x) for x in self.payload]
+        return XPeelStatusResponse(
+            error_code_1=int_payload[0],
+            error_code_2=int_payload[1],
+            error_code_3=int_payload[2],
+        )
+
+    def __repr__(self) -> str:
         return f"<XPeelMessage type={self.type} payload=({self.payload})>"
 
 
@@ -67,6 +78,8 @@ class XPeel:
         while True:
             msg = XPeelMessage(self.recv())
             if msg.type == "tape":
+                # dump next item in queue - it will be a "ready" message
+                self.recv()
                 return XPeelMessage(msg)
 
     def peel(self, param, adhere) -> XPeelMessage:

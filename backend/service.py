@@ -6,41 +6,36 @@ from xpeel import XPeel
 
 xpeel = XPeel("192.168.0.201", 1628)
 
+
 class NodeConnector(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
         return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
 
     def XPeelStatus(self, request, context):
-        msg = xpeel.status()
-        return xpeel_pb2.XPeelStatusResponse(
-            error_code_1=msg.payload[0],
-            error_code_2=msg.payload[1],
-            error_code_3=msg.payload[2],
-        )
+        return xpeel.status().to_xpeel_status_response()
 
     def XPeelReset(self, request, context):
-        msg = xpeel.status()
-        return xpeel_pb2.XPeelStatusResponse(
-            error_code_1=msg.payload[0],
-            error_code_2=msg.payload[1],
-            error_code_3=msg.payload[2],
-        )
+        return xpeel.reset().to_xpeel_status_response()
 
-    def XPeelXPeel(self, request, context):
-        msg = xpeel.status()
-        return xpeel_pb2.XPeelStatusResponse(
-            error_code_1=msg.payload[0],
-            error_code_2=msg.payload[1],
-            error_code_3=msg.payload[2],
-        )
+    def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
+        return xpeel.peel(request.set_number, request.adhere_time).to_xpeel_status_response()
 
     def XPeelSealCheck(self, request, context):
-        return xpeel_pb2.XPeelSealCheckResponse(seal_detected=False)
+        msg = xpeel.seal_check()
+        has_seal = msg.type == "ready" and msg.payload[0] == "04"
+        return xpeel_pb2.XPeelSealCheckResponse(seal_detected=has_seal)
 
     def XPeelTapeRemaining(self, request, context):
+        msg = xpeel.tape_remaining()
+        if msg.type != "tape":
+            return xpeel_pb2.XPeelTapeRemainingResponse(
+                deseals_remaining=-1,
+                take_up_spool_space_remaining=-1
+            )
+
         return xpeel_pb2.XPeelTapeRemainingResponse(
-            deseals_remaining=100,
-            take_up_spool_space_remaining=100
+            deseals_remaining=int(msg.payload[0]) * 10,
+            take_up_spool_space_remaining=int(msg.payload[1]) * 10
         )
 
 
