@@ -56,13 +56,11 @@ class XPeel:
 
         return self.recv_queue.get()
 
-    def waive_ack(self) -> str:
+    def wait_for_type(self, cmd_type: str) -> XPeelMessage:
         while True:
-            msg = self.recv()
-            if msg is None or msg[1:4] == "ack":
-                continue
-
-            return msg
+            msg = XPeelMessage(self.recv())
+            if msg.type == cmd_type:
+                return msg
 
     def status(self) -> XPeelMessage:
         self.send("*stat")
@@ -70,11 +68,11 @@ class XPeel:
 
     def reset(self) -> XPeelMessage:
         self.send("*reset")
-        return XPeelMessage(self.waive_ack())
+        return XPeelMessage(self.wait_for_type("ready"))
 
     def seal_check(self) -> XPeelMessage:
         self.send("*sealcheck")
-        return XPeelMessage(self.waive_ack())
+        return XPeelMessage(self.wait_for_type("ready"))
 
     def tape_remaining(self) -> XPeelMessage:
         self.send("*tapeleft")
@@ -88,7 +86,7 @@ class XPeel:
 
     def peel(self, param, adhere) -> XPeelMessage:
         self.send(f"*xpeel:{param}{adhere}")
-        return XPeelMessage(self.waive_ack())
+        return XPeelMessage(self.wait_for_type("ready"))
 
     def disconnect(self):
         self.sock_conn.close()
