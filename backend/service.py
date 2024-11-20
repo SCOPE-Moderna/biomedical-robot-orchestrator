@@ -27,12 +27,6 @@ class NodeConnector(node_connector_pb2_grpc.NodeConnectorServicer):
 
     def XPeelTapeRemaining(self, request, context):
         msg = xpeel.tape_remaining()
-        if msg.type != "tape":
-            return xpeel_pb2.XPeelTapeRemainingResponse(
-                deseals_remaining=-1,
-                take_up_spool_space_remaining=-1
-            )
-
         return xpeel_pb2.XPeelTapeRemainingResponse(
             deseals_remaining=int(msg.payload[0]) * 10,
             take_up_spool_space_remaining=int(msg.payload[1]) * 10
