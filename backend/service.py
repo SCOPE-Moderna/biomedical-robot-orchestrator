@@ -4,29 +4,45 @@ import grpc
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 
+logger = logging.getLogger(__name__)
+
 xpeel = XPeel("192.168.0.201", 1628)
 
 
-class NodeConnector(node_connector_pb2_grpc.NodeConnectorServicer):
+class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
+        logger.info(f"Received ping: {request.message}")
         return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
 
     def XPeelStatus(self, request, context):
-        return xpeel.status().to_xpeel_status_response()
+        logger.info("Received XPeelStatus request")
+        msg = xpeel.status().to_xpeel_status_response()
+        logger.info(f"XPeelStatus response: {msg}")
+        return msg
 
     def XPeelReset(self, request, context):
-        return xpeel.reset().to_xpeel_status_response()
+        logger.info("Received XPeelReset request")
+        msg = xpeel.reset().to_xpeel_status_response()
+        logger.info(f"XPeelReset response: {msg}")
+        return msg
 
     def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
-        return xpeel.peel(request.set_number, request.adhere_time).to_xpeel_status_response()
+        logger.info(f"Received XPeelXPeel request: {request}")
+        msg = xpeel.peel(request.set_number, request.adhere_time).to_xpeel_status_response()
+        logger.info(f"XPeelXPeel response: {msg}")
+        return msg
 
     def XPeelSealCheck(self, request, context):
+        logger.info("Received XPeelSealCheck request")
         msg = xpeel.seal_check()
         has_seal = msg.type == "ready" and msg.payload[0] == "04"
+        logger.info(f"XPeelSealCheck response: {has_seal}")
         return xpeel_pb2.XPeelSealCheckResponse(seal_detected=has_seal)
 
     def XPeelTapeRemaining(self, request, context):
+        logger.info("Received XPeelTapeRemaining request")
         msg = xpeel.tape_remaining()
+        logger.info(f"XPeelTapeRemaining response: {msg}")
         return xpeel_pb2.XPeelTapeRemainingResponse(
             deseals_remaining=int(msg.payload[0]) * 10,
             take_up_spool_space_remaining=int(msg.payload[1]) * 10
@@ -36,12 +52,13 @@ class NodeConnector(node_connector_pb2_grpc.NodeConnectorServicer):
 def serve():
     port = 50051
 
-    print(f"Starting gRPC server on port {port}")
+    logger.info(f"Starting gRPC server on port {port}")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(NodeConnector(), server)
+    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(NodeConnectorServicer(), server)
     server.add_insecure_port(f"[::]:{port}")
     server.start()
     server.wait_for_termination()
+    logger.info("gRPC server stopped")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 import socket
 from queue import SimpleQueue
 from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
+logger = logging.getLogger(__name__)
 
 class XPeelMessage:
     def __init__(self, msg):
@@ -35,7 +37,7 @@ class XPeel:
         self.port = port
         self._connect()
         self.recv_queue = SimpleQueue()
-        print(f"Connected on {addr}:{port}!")
+        logger.info(f"Connected on {addr}:{port}!")
 
     def _connect(self):
         self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -43,21 +45,23 @@ class XPeel:
 
     def send(self, data: str):
         try:
+            logger.debug(f"Sending data: {data}")
             self.sock_conn.sendall((data + "\r\n").encode())
         except BrokenPipeError:
+            logger.info("Connection lost, reconnecting...")
             self._connect()
             self.send(data)
 
     def recv(self) -> str | None:
         if self.recv_queue.qsize() > 0:
-            return self.recv_queue.get()
-
+            msg = self.recv_queue.get()
+            logger.debug(f"Receiving data ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue")
         try:
             data = self.sock_conn.recv(1024).decode()
         except BrokenPipeError:
             self._connect()
             return self.recv()
-        
+
         if len(data) == 0:
             return
 
@@ -66,11 +70,14 @@ class XPeel:
         for msg in msgs:
             self.recv_queue.put(msg.strip())
 
-        return self.recv_queue.get()
+        msg = self.recv_queue.get()
+        logger.debug(f"Received data from device, returning {msg}, {self.recv_queue.qsize()} in queue")
 
     def wait_for_type(self, cmd_type: str) -> XPeelMessage:
+        logger.debug(f"Waiting for message of type {cmd_type}")
         while True:
             msg = XPeelMessage(self.recv())
+            logger.debug(f"Waiting for type {cmd_type}, got message with type {msg.type}")
             if msg.type == cmd_type:
                 return msg
 
