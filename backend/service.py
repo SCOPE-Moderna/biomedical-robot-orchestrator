@@ -1,6 +1,9 @@
 import logging
+import sys
 from concurrent import futures
+
 import grpc
+
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 
@@ -62,5 +65,5 @@ def serve():
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     serve()
