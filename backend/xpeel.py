@@ -56,9 +56,9 @@ class XPeel:
     def recv(self) -> str | None:
         if self.recv_queue.qsize() > 0:
             msg = self.recv_queue.get()
-            logger.debug(f"Receiving data ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue")
+            logger.debug(f"recv: ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue")
             return msg
-        
+
         try:
             data = self.sock_conn.recv(1024).decode()
         except BrokenPipeError:
@@ -71,17 +71,19 @@ class XPeel:
         # split data into list of strings
         msgs = data.split("\r\n")
         for msg in msgs:
-            self.recv_queue.put(msg.strip())
+            stripped = msg.strip()
+            if len(stripped) > 0:
+                self.recv_queue.put(stripped)
 
         msg = self.recv_queue.get()
-        logger.debug(f"Received data from device, returning {msg}, {self.recv_queue.qsize()} in queue")
+        logger.debug(f"recv: from device, returning {msg}, {self.recv_queue.qsize()} in queue")
         return msg
 
     def wait_for_type(self, cmd_type: str) -> XPeelMessage:
-        logger.debug(f"Waiting for message of type {cmd_type}")
+        logger.debug(f"waiting for type {cmd_type}")
         while True:
             msg = XPeelMessage(self.recv())
-            logger.debug(f"Waiting for type {cmd_type}, got message with type {msg.type}")
+            logger.debug(f"waiting for type {cmd_type}, got {msg.type}")
             if msg.type == cmd_type:
                 return msg
 
