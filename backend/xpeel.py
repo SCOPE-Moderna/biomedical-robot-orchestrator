@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class XPeelMessage:
     def __init__(self, msg):
+
         self.raw_msg: str = msg
         split_msg = msg[1:].split(":")
         self.type = split_msg[0]
@@ -72,6 +73,7 @@ class XPeel:
 
         msg = self.recv_queue.get()
         logger.debug(f"Received data from device, returning {msg}, {self.recv_queue.qsize()} in queue")
+        return msg
 
     def wait_for_type(self, cmd_type: str) -> XPeelMessage:
         logger.debug(f"Waiting for message of type {cmd_type}")
