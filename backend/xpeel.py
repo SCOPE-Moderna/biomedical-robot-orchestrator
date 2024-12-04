@@ -57,6 +57,8 @@ class XPeel:
         if self.recv_queue.qsize() > 0:
             msg = self.recv_queue.get()
             logger.debug(f"Receiving data ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue")
+            return msg
+        
         try:
             data = self.sock_conn.recv(1024).decode()
         except BrokenPipeError:

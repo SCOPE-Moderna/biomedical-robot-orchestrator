@@ -19,21 +19,21 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
     def XPeelStatus(self, request, context):
         logger.info("Received XPeelStatus request")
-        msg = xpeel.status().to_xpeel_status_response()
+        msg = xpeel.status()
         logger.info(f"XPeelStatus response: {msg}")
-        return msg
+        return msg.to_xpeel_status_response()
 
     def XPeelReset(self, request, context):
         logger.info("Received XPeelReset request")
-        msg = xpeel.reset().to_xpeel_status_response()
+        msg = xpeel.reset()
         logger.info(f"XPeelReset response: {msg}")
-        return msg
+        return msg.to_xpeel_status_response()
 
     def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
-        msg = xpeel.peel(request.set_number, request.adhere_time).to_xpeel_status_response()
+        msg = xpeel.peel(request.set_number, request.adhere_time)
         logger.info(f"XPeelXPeel response: {msg}")
-        return msg
+        return msg.to_xpeel_status_response()
 
     def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")
