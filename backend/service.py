@@ -75,6 +75,8 @@ class MyEventHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if event.src_path.endswith("flows.json"):
             logger.info(f"flows.json modified: {event.src_path}")
+        else:
+            logger.info(f"modified: {event.src_path}")
 
     def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
         logger.info(f"created: {event.src_path}")
@@ -84,7 +86,7 @@ class MyEventHandler(FileSystemEventHandler):
 
 def watch():
     event_handler = MyEventHandler()
-    observer.schedule(event_handler, path='/home/aquarium/.node-red', recursive=True)
+    observer.schedule(event_handler, path='/home/aquarium/.node-red', recursive=False)
     observer.start()
     observer.join()
 
