@@ -10,7 +10,8 @@ from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2
 from xpeel import XPeel
 
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, DirCreatedEvent, FileCreatedEvent, DirDeletedEvent, FileDeletedEvent
+from watchdog.events import FileSystemEventHandler, DirCreatedEvent, FileCreatedEvent, DirDeletedEvent, \
+    FileDeletedEvent, DirMovedEvent, FileMovedEvent
 
 logger = logging.getLogger(__name__)
 
@@ -72,17 +73,28 @@ def serve():
     observer.stop()
 
 class MyEventHandler(FileSystemEventHandler):
-    def on_modified(self, event):
-        if event.src_path.endswith("flows.json"):
-            logger.info(f"flows.json modified: {event.src_path}")
+    # def on_modified(self, event):
+    #     if event.src_path.endswith("flows.json"):
+    #         logger.info(f"flows.json modified: {event.src_path}")
+    #     else:
+    #         logger.info(f"modified: {event.src_path}")
+    #
+    # def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
+    #     logger.info(f"created: {event.src_path}")
+    #
+    # def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
+    #     logger.info(f"deleted: {event.src_path}")
+
+    def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
+        if event.dest_path.endswith("flows.json"):
+            logger.info(f"flows.json moved: {event.dest_path}")
+
+            # print out the number of lines in flows.json
+            with open(event.dest_path) as f:
+                lines = f.readlines()
+                logger.info(f"flows.json line count: {len(lines)}")
         else:
-            logger.info(f"modified: {event.src_path}")
-
-    def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
-        logger.info(f"created: {event.src_path}")
-
-    def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
-        logger.info(f"deleted: {event.src_path}")
+            logger.info(f"moved: {event.dest_path}")
 
 def watch():
     event_handler = MyEventHandler()
