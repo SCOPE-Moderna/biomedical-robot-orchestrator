@@ -8,7 +8,7 @@ from collections import defaultdict
 from watchdog.events import FileSystemEventHandler, DirMovedEvent, FileMovedEvent
 from watchdog.observers import Observer
 
-from backend.flows.types import RawNode
+from types import RawNode
 
 logger = logging.getLogger(__name__)
 
