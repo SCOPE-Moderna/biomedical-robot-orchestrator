@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import json
 from os import path
-from collections import defaultdict
 
 from watchdog.events import FileSystemEventHandler, DirMovedEvent, FileMovedEvent
 from watchdog.observers import Observer
@@ -33,7 +32,7 @@ class FlowsGraph:
         # self.graph is a dictionary of RawNodes, indexed by their id
         self.raw_graph: dict[str, RawNode] = {}
         # key: node id, value: nodes that forward to it
-        self.input_graph: defaultdict[str, list[RawNode]] = defaultdict(default_factory=list())
+        self.input_graph: dict[str, list[RawNode]] = {}
         self.no_input_nodes: dict[str, None] = {}
 
         # read in the graph and process it
@@ -67,6 +66,9 @@ class FlowsGraph:
             if len(node["wires"]) > 0:
                 for output_id in node["wires"]:
                     for input_id in output_id:
+                        if input_id not in self.input_graph:
+                            self.input_graph[input_id] = []
+                            
                         self.input_graph[input_id].append(node)
                         del self.no_input_nodes[input_id]
 
