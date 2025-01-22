@@ -68,13 +68,15 @@ class FlowsGraph:
                     for input_id in output_id:
                         if input_id not in self.input_graph:
                             self.input_graph[input_id] = []
-                            
+
                         self.input_graph[input_id].append(node)
-                        del self.no_input_nodes[input_id]
+
+                        if input_id in self.no_input_nodes:
+                            del self.no_input_nodes[input_id]
 
             # if the node has anything pointing into it,
             # remove from no_input_nodes
-            if node["id"] in self.input_graph:
+            if node["id"] in self.input_graph and node["id"] in self.no_input_nodes:
                 del self.no_input_nodes[node["id"]]
             else:
                 self.no_input_nodes[node["id"]] = None
