@@ -12,7 +12,7 @@ from .types import RawNode
 
 logger = logging.getLogger(__name__)
 
-IGNORE_NODE_TYPES = {"tab"}
+IGNORE_NODE_TYPES = {"tab", "subflow"}
 
 observer = Observer()
 
