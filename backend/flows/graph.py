@@ -12,6 +12,8 @@ from .types import RawNode
 
 logger = logging.getLogger(__name__)
 
+IGNORE_NODE_TYPES = {"tab"}
+
 observer = Observer()
 
 class FlowsGraph:
@@ -59,6 +61,9 @@ class FlowsGraph:
         self.raw_graph = {}
         # parse all nodes into RawNodes
         for node in json_file:
+            if node["type"] in IGNORE_NODE_TYPES:
+                continue
+
             self.raw_graph[node["id"]] = node
 
             if len(node["wires"]) > 0:
