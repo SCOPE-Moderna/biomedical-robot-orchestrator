@@ -61,10 +61,11 @@ class FlowsGraph:
         for node in json_file:
             self.raw_graph[node["id"]] = node
 
-            for output_id in node["wires"]:
-                for input_id in output_id:
-                    self.input_graph[input_id].append(node)
-                    del self.no_input_nodes[input_id]
+            if len(node["wires"]) > 0:
+                for output_id in node["wires"]:
+                    for input_id in output_id:
+                        self.input_graph[input_id].append(node)
+                        del self.no_input_nodes[input_id]
 
             # if the node has anything pointing into it,
             # remove from no_input_nodes
