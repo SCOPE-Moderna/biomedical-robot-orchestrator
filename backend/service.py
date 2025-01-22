@@ -6,7 +6,7 @@ from concurrent import futures
 
 import grpc
 
-from backend.flows.main import FlowsGraph
+from flows.graph import FlowsGraph
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 
