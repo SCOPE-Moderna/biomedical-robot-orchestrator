@@ -7,6 +7,9 @@ import grpc
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 
+from watchdog.observers import Observer
+from watchdog.events import LoggingEventHandler
+
 logger = logging.getLogger(__name__)
 
 xpeel = XPeel("192.168.0.201", 1628)
@@ -51,6 +54,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             take_up_spool_space_remaining=int(msg.payload[1]) * 10
         )
 
+observer = Observer()
 
 def serve():
     port = 50051
@@ -59,9 +63,17 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(NodeConnectorServicer(), server)
     server.add_insecure_port(f"[::]:{port}")
+    watch()
     server.start()
     server.wait_for_termination()
     logger.info("gRPC server stopped")
+    observer.stop()
+
+def watch():
+    event_handler = LoggingEventHandler()
+    observer.schedule(event_handler, path='/home/aquarium/.node-red/flows.json', recursive=True)
+    observer.start()
+    observer.join()
 
 
 if __name__ == "__main__":
