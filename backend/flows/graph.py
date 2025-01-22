@@ -9,6 +9,9 @@ from watchdog.observers import Observer
 
 from .types import RawNode
 
+# Node types to ignore. Nodes without wires are ignored by default
+IGNORE_NODE_TYPES = {"comment"}
+
 logger = logging.getLogger(__name__)
 
 observer = Observer()
@@ -58,7 +61,7 @@ class FlowsGraph:
         self.raw_graph = {}
         # parse all nodes into RawNodes
         for node in json_file:
-            if "wires" not in node:
+            if "wires" not in node or node["type"] in IGNORE_NODE_TYPES:
                 continue
 
             self.raw_graph[node["id"]] = node
@@ -76,8 +79,9 @@ class FlowsGraph:
 
             # if the node has anything pointing into it,
             # remove from no_input_nodes
-            if node["id"] in self.input_graph and node["id"] in self.no_input_nodes:
-                del self.no_input_nodes[node["id"]]
+            if node["id"] in self.input_graph:
+                if node["id"] in self.no_input_nodes:
+                    del self.no_input_nodes[node["id"]]
             else:
                 self.no_input_nodes[node["id"]] = None
 
