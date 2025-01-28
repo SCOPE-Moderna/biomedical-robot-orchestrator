@@ -100,6 +100,7 @@ class Node:
     def __init__(self, graph: FlowsGraph, raw_node: RawNode):
         self.graph = graph
         self.raw_node = raw_node
+        self.id = self.raw_node["id"]
 
     def next_nodes(self, output_index = 0) -> list[Node] | None:
         output_ids = self.raw_node["wires"][output_index]

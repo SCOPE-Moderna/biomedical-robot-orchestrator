@@ -6,7 +6,7 @@ from concurrent import futures
 
 import grpc
 
-from flows.graph import FlowsGraph
+from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 
@@ -19,6 +19,27 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
         logger.info(f"Received ping: {request.message}")
         return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
+
+    def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
+        logger.info("Received StartFlow request")
+        start_node = graph.get_node(request.start_node_id)
+        forward_node_ids: set[str] = {start_node.id}
+        if start_node is None:
+            logger.error(f"Node {request.start_node_id} not found")
+            return node_connector_pb2.StartFlowResponse(success=False, message=f"Start node (id {request.start_node_id}) not found")
+
+        def all_future_nodes(node: Node):
+            next_nodes = node.next_nodes()
+            if next_nodes is None:
+                return
+
+            for next_node in next_nodes:
+                forward_node_ids.add(next_node.id)
+                all_future_nodes(next_node)
+
+        logger.debug(f"All nodes in this run: {forward_node_ids}")
+        logger.info("StartFlow response: success")
+        return node_connector_pb2.StartFlowResponse(success=True, message="Flow started successfully")
 
     def XPeelStatus(self, request, context):
         logger.info("Received XPeelStatus request")

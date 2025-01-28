@@ -1,0 +1,36 @@
+<script type="text/javascript">
+  RED.nodes.registerType("start-flow", {
+    category: "flows",
+    color: "#a6bbcf",
+    defaults: {
+      flow_name: { value: "Unnamed Flow" },
+    },
+    inputs: 0,
+    outputs: 1,
+    icon: "inject.svg",
+    label: () => `Start ${this.flow_name}`,
+    button: {
+      onclick: this.onButtonClick,
+    },
+  });
+</script>
+
+<script type="text/html" data-template-name="start-flow">
+  <div class="form-row">
+    <label for="node-input-flow_name"
+      ><i class="fa fa-tag"></i> Flow Name</label
+    >
+    <input type="text" id="node-input-flow_name" placeholder="Name" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="start-flow">
+  <p>Denotes the start of a flow, with the ability to start it directly.</p>
+  <p>
+    Since <b>flows do not run in Node-RED</b> (they run in the Python backend),
+    clicking this node tells the Python backend to run this flow.
+    <br />
+    After starting a flow, changes made to the flow won't take effect until the
+    next run.
+  </p>
+</script>

@@ -11,10 +11,21 @@ message PingResponse {
   string message = 2;
 }
 
+message StartFlowRequest {
+  string start_node_id = 1;
+  string flow_name = 2;
+}
+
+message StartFlowResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 message Empty {}
 
 service NodeConnector {
   rpc Ping (PingRequest) returns (PingResponse) {}
+  rpc StartFlow (StartFlowRequest) returns (StartFlowResponse) {}
 
   // XPeel
   rpc XPeelStatus (Empty) returns (XPeelStatusResponse) {}
