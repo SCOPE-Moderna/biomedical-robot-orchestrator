@@ -25,9 +25,6 @@ class FlowsGraph:
             if event.dest_path.endswith("flows.json"):
                 # print out the number of lines in flows.json
                 with open(event.dest_path) as f:
-                    lines = f.readlines()
-                    print(f"flows.json line count: {len(lines)}")
-
                     json_file = json.load(f)
                     self.on_flows_changed(json_file)
 
@@ -59,6 +56,8 @@ class FlowsGraph:
 
         # clear the graph
         self.raw_graph = {}
+        self.input_graph = {}
+        self.no_input_nodes = {}
         # parse all nodes into RawNodes
         for node in json_file:
             if "wires" not in node or node["type"] in IGNORE_NODE_TYPES:
@@ -88,6 +87,11 @@ class FlowsGraph:
         logger.debug(f"no_input_nodes: {self.no_input_nodes}")
         logger.info(f"flows.json update successful, {len(self.raw_graph)} nodes found")
 
+    def get_node(self, node_id: str) -> Node | None:
+        if node_id not in self.raw_graph:
+            return None
+
+        return Node(self, self.raw_graph[node_id])
 
     def __repr__(self):
         return f"<FlowsGraph num_nodes={len(self.raw_graph)}, no_input_nodes={self.no_input_nodes}>"
