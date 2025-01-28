@@ -1,14 +1,7 @@
 import rtde_receive
 import rtde_control
 import rtde_io
-
-class generalized_input:
-    x_position = 0
-    y_position = 0
-    waypoint_number = 0
-    string_input = ""
-    ip_add = ""
-    sub_function_name = ""
+from device_abc import generalized_input
 
 class UR3_test_controller_1:
     device_ip = "192.168.0.205"
@@ -17,14 +10,15 @@ class UR3_test_controller_1:
     waypoint_J2 = [0.0016515760216861963, -1.5747383276568812, 0.002468585968017578, -1.5649493376361292, 0.007608110550791025, 0.0018253473099321127]
 
     waypoints = [waypoint_J1,waypoint_J2]
-    def __init__(self):
+    def __init__(self,ip_addr):
+        #ip_addr = "192.168.0.205"
         print("Initializing robot")
         print("attempting receive interface connection")
-        self.receive_interface = rtde_receive.RTDEReceiveInterface("192.168.0.205")
+        self.receive_interface = rtde_receive.RTDEReceiveInterface(ip_addr)
         
 
         print("attempting control interface connection")
-        self.control_interface = rtde_control.RTDEControlInterface("192.168.0.205")
+        self.control_interface = rtde_control.RTDEControlInterface(ip_addr)
     
     def retrieve_state_joint(self,general_input):
         return self.receive_interface.getActualQ()
@@ -82,9 +76,9 @@ call_input.string_input = "isSteady"
 my_robot.call_node_interface("move_J_waypoint",call_input)
 
 if my_robot.call_node_interface("general_control_call",call_input):
-    print("robot is ready steady")
+    print("robot is steady")
 else:
-    print("robot_unsteady")
+    print("robot is unsteady")
 
 call_input.waypoint_number = 1
 my_robot.call_node_interface("move_J_waypoint",call_input)
