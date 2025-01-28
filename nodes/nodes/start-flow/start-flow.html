@@ -8,7 +8,9 @@
     inputs: 0,
     outputs: 1,
     icon: "inject.svg",
-    label: () => `Start ${this.flow_name}`,
+    label: function () {
+      return `Start ${this.flow_name}`;
+    },
     button: {
       onclick: this.onButtonClick,
     },

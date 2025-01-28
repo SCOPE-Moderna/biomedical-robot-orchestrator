@@ -26,11 +26,12 @@ module.exports = function (RED: NodeAPI) {
     config: NodeDef,
   ): void {
     RED.nodes.createNode(this, config);
+    const node = this;
 
-    this.onButtonClick = () => {
+    node.onButtonClick = () => {
       const startRequest = new StartFlowRequest({
-        start_node_id: this.id,
-        flow_name: this.flow_name,
+        start_node_id: node.id,
+        flow_name: node.flow_name,
       });
 
       service.StartFlow(startRequest, (error, response) => {
