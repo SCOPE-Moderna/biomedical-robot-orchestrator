@@ -12,7 +12,10 @@
       return `Start ${this.flow_name}`;
     },
     button: {
-      onclick: this.onButtonClick,
+      onclick: function () {
+        debugger;
+        return this.onButtonClick();
+      },
     },
   });
 </script>
