@@ -6,6 +6,7 @@ from concurrent import futures
 
 import grpc
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
@@ -14,6 +15,7 @@ from xpeel import XPeel
 logger = logging.getLogger(__name__)
 
 flask_app = Flask(__name__)
+CORS(flask_app)
 
 xpeel = XPeel("192.168.0.201", 1628)
 
@@ -77,6 +79,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             deseals_remaining=int(msg.payload[0]) * 10,
             take_up_spool_space_remaining=int(msg.payload[1]) * 10
         )
+
 
 @flask_app.route("/api/start-flow/<node_id>", methods=["POST"])
 def start_flow(node_id: str):
