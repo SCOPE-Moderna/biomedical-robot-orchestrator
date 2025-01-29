@@ -1,4 +1,50 @@
 <script type="text/javascript">
+  const hostname = new URL(window.location.href).hostname;
+  const flaskUrl = `http://${hostname}:${50052}`;
+
+  function onButtonClick(node) {
+    $.ajax({
+      url: `${flaskUrl}/api/start-flow/${node.id}`,
+      type: "POST",
+      data: JSON.stringify({
+        node_id: node.id,
+        flow_name: node.flow_name,
+      }),
+      contentType: "application/json",
+      success: function (data) {
+        RED.notify("Successfully started the flow!", {
+          type: "success",
+          id: "start-flow",
+          timeout: 2000,
+        });
+      },
+      error: function (jqXHR) {
+        if (jqXHR.status === 404) {
+          RED.notify("Please deploy the flow first.", {
+            type: "error",
+            timeout: 2000,
+          });
+        } else if (jqXHR.status === 500) {
+          RED.notify("Please check the logs for more information.", {
+            type: "error",
+            timeout: 2000,
+          });
+        } else if (jqXHR.status === 0) {
+          RED.notify("No response from the backend.", {
+            type: "error",
+            id: "start-flow",
+            timeout: 2000,
+          });
+        } else {
+          RED.notify("An unexpected error occurred.", {
+            type: "error",
+            timeout: 2000,
+          });
+        }
+      },
+    });
+  }
+
   RED.nodes.registerType("start-flow", {
     category: "flows",
     color: "#a6bbcf",
@@ -12,14 +58,18 @@
       return `Start ${this.flow_name}`;
     },
     button: {
+      enabled: function () {
+        return !this.changed;
+      },
       onclick: function () {
-        debugger;
-        return this.onButtonClick();
+        if (this.changed) {
+          return;
+        }
+        return onButtonClick(this);
       },
     },
   });
 </script>
-
 <script type="text/html" data-template-name="start-flow">
   <div class="form-row">
     <label for="node-input-flow_name"
