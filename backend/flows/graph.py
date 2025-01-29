@@ -102,7 +102,14 @@ class Node:
         self.raw_node = raw_node
         self.id = self.raw_node["id"]
 
+    @property
+    def has_wires(self) -> bool:
+        return "wires" in self.raw_node and len(self.raw_node["wires"]) > 0
+
     def next_nodes(self, output_index = 0) -> list[Node] | None:
+        if not self.has_wires:
+            return None
+        
         output_ids = self.raw_node["wires"][output_index]
         if len(output_ids) == 0:
             return None
