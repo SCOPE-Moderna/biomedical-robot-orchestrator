@@ -63,7 +63,10 @@
         return this.changed;
       },
       onclick: function () {
-        return onButtonClick();
+        if (this.changed) {
+          return;
+        }
+        return onButtonClick(node);
       },
     },
   });
