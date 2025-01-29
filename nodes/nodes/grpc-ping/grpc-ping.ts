@@ -24,8 +24,10 @@ module.exports = function (RED: NodeAPI) {
       service.Ping(pingRequest, (error, response) => {
         if (error) {
           console.log(error);
+          this.status({ fill: "red", shape: "ring", text: "error." });
         }
         send([{ payload: response.success }, { payload: response.message }]);
+        this.status({ fill: "green", shape: "dot", text: "response success." });
         done();
       });
     });
