@@ -60,7 +60,7 @@
     },
     button: {
       enabled: function () {
-        return this.changed;
+        return !this.changed;
       },
       onclick: function () {
         if (this.changed) {
