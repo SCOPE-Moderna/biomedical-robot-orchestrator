@@ -90,7 +90,7 @@ def start_flow(node_id: str):
         logger.error(f"Node {node_id} not found")
         return jsonify({"success": False, "message": f"Start node (id {node_id}) not found"})
 
-    if start_node.raw_node['type'] != "start-node":
+    if start_node.raw_node['type'] != "start-flow":
         logger.error(f"Node {node_id} is not a start node")
         return jsonify({"success": False, "message": f"Node (id {node_id}) is not a start node"})
 
