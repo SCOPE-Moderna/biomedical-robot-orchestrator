@@ -1,7 +1,6 @@
 <script type="text/javascript">
   const hostname = new URL(window.location.href).hostname;
-  const port = new URL(window.location.href).port;
-  const flaskUrl = `http://${hostname}:${port + 1}`;
+  const flaskUrl = `http://${hostname}:${50052}`;
 
   function onButtonClick(node) {
     $.ajax({
