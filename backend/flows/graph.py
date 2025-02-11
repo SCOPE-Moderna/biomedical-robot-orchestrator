@@ -109,7 +109,7 @@ class Node:
     def next_nodes(self, output_index = 0) -> list[Node] | None:
         if not self.has_wires:
             return None
-        
+
         output_ids = self.raw_node["wires"][output_index]
         if len(output_ids) == 0:
             return None

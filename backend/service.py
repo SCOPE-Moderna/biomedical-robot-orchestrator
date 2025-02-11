@@ -12,10 +12,14 @@ from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 
+from psycopg import connect, Connection
+
 logger = logging.getLogger(__name__)
 
 flask_app = Flask(__name__)
 CORS(flask_app)
+
+conn: Connection
 
 xpeel = XPeel("192.168.0.201", 1628)
 
@@ -130,4 +134,16 @@ def serve():
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     graph = FlowsGraph("/home/aquarium/.node-red")
+
+    logger.info(f"Connecting to database")
+    conn = connect("postgres://vestradb_user:veggie_straws@127.0.0.1:5432/vestradb")
+    logger.info(f"Connected to database")
+    logger.info(f"Making test query")
+    with conn.cursor() as cur:
+        data = cur.execute("SELECT * FROM test_table")
+        print(data)
+        logger.info(f"Test query successful")
+
+    conn.close()
+
     serve()
