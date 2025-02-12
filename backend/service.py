@@ -5,8 +5,6 @@ import sys
 from concurrent import futures
 
 import grpc
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 
 from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
@@ -15,9 +13,6 @@ from xpeel import XPeel
 from psycopg import connect, Connection
 
 logger = logging.getLogger(__name__)
-
-flask_app = Flask(__name__)
-CORS(flask_app)
 
 conn: Connection
 
@@ -29,26 +24,26 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"Received ping: {request.message}")
         return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
 
-    # def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
-    #     logger.info("Received StartFlow request")
-    #     start_node = graph.get_node(request.start_node_id)
-    #     forward_node_ids: set[str] = {start_node.id}
-    #     if start_node is None:
-    #         logger.error(f"Node {request.start_node_id} not found")
-    #         return node_connector_pb2.StartFlowResponse(success=False, message=f"Start node (id {request.start_node_id}) not found")
-    #
-    #     def all_future_nodes(node: Node):
-    #         next_nodes = node.next_nodes()
-    #         if next_nodes is None:
-    #             return
-    #
-    #         for next_node in next_nodes:
-    #             forward_node_ids.add(next_node.id)
-    #             all_future_nodes(next_node)
-    #
-    #     logger.debug(f"All nodes in this run: {forward_node_ids}")
-    #     logger.info("StartFlow response: success")
-    #     return node_connector_pb2.StartFlowResponse(success=True, message="Flow started successfully")
+    def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
+        logger.info("Received StartFlow request")
+        start_node = graph.get_node(request.start_node_id)
+        forward_node_ids: set[str] = {start_node.id}
+        if start_node is None:
+            logger.error(f"Node {request.start_node_id} not found")
+            return node_connector_pb2.StartFlowResponse(success=False, message=f"Start node (id {request.start_node_id}) not found")
+
+        def all_future_nodes(node: Node):
+            next_nodes = node.next_nodes()
+            if next_nodes is None:
+                return
+
+            for next_node in next_nodes:
+                forward_node_ids.add(next_node.id)
+                all_future_nodes(next_node)
+
+        logger.debug(f"All nodes in this run: {forward_node_ids}")
+        logger.info("StartFlow response: success")
+        return node_connector_pb2.StartFlowResponse(success=True, message="Flow started successfully", run_id="test-run-id")
 
     def XPeelStatus(self, request, context):
         logger.info("Received XPeelStatus request")
@@ -83,35 +78,6 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             deseals_remaining=int(msg.payload[0]) * 10,
             take_up_spool_space_remaining=int(msg.payload[1]) * 10
         )
-
-
-@flask_app.route("/api/start-flow/<node_id>", methods=["POST"])
-def start_flow(node_id: str):
-    logger.info("Received StartFlow request")
-    start_node = graph.get_node(node_id)
-    forward_node_ids: set[str] = {start_node.id}
-    if start_node is None:
-        logger.error(f"Node {node_id} not found")
-        return jsonify({"success": False, "message": f"Start node (id {node_id}) not found"})
-
-    if start_node.raw_node['type'] != "start-flow":
-        logger.error(f"Node {node_id} is not a start node")
-        return jsonify({"success": False, "message": f"Node (id {node_id}) is not a start node"})
-
-    def all_future_nodes(node: Node):
-        next_nodes = node.next_nodes()
-        if next_nodes is None:
-            return
-
-        for next_node in next_nodes:
-            forward_node_ids.add(next_node.id)
-            all_future_nodes(next_node)
-    all_future_nodes(start_node)
-
-    logger.debug(f"All nodes in this run: {forward_node_ids}")
-    logger.info("StartFlow response: success")
-    return jsonify({"success": True, "message": "Flow started successfully"})
-
 
 def serve():
     port = 50051

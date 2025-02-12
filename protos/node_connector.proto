@@ -19,6 +19,7 @@ message StartFlowRequest {
 message StartFlowResponse {
   bool success = 1;
   string message = 2;
+  string run_id = 3;
 }
 
 message Empty {}

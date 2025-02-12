@@ -28,7 +28,17 @@ module.exports = function (RED: NodeAPI) {
     RED.nodes.createNode(this, config);
     const node = this;
 
-    node.onButtonClick = () => {
+    this.on("input", async function (msg: NodeMessage, send, done) {
+      // @ts-ignore
+      if (msg.__orchestrator_run_id) {
+        done(
+          new Error(
+            "This node is not designed to be used in the middle of a flow. It should be the first node in a flow.",
+          ),
+        );
+        return;
+      }
+
       const startRequest = new StartFlowRequest({
         start_node_id: node.id,
         flow_name: node.flow_name,
@@ -37,10 +47,22 @@ module.exports = function (RED: NodeAPI) {
       service.StartFlow(startRequest, (error, response) => {
         if (error) {
           console.log(error);
+          done(error);
+          return;
         }
-        console.log(response);
+        this.status({
+          fill: "green",
+          shape: "dot",
+          text: `run id: ${response.run_id}`,
+        });
+        // @ts-ignore
+        this.send({
+          __orchestrator_run_id: response.run_id,
+          payload: response.toObject(),
+        });
+        done();
       });
-    };
+    });
   }
 
   RED.nodes.registerType("start-flow", StartFlowNodeConstructor);
