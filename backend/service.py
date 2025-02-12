@@ -140,7 +140,7 @@ if __name__ == "__main__":
     logger.info(f"Connected to database")
     logger.info(f"Making test query")
     with conn.cursor() as cur:
-        data = cur.execute("SELECT * FROM test_table")
+        data = cur.execute("SELECT * FROM test_table").fetchall()
         print(data)
         logger.info(f"Test query successful")
 
