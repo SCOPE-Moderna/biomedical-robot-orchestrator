@@ -31,6 +31,11 @@ module.exports = function (RED: NodeAPI) {
     this.on("input", async function (msg: NodeMessage, send, done) {
       // @ts-ignore
       if (msg.__orchestrator_run_id) {
+        this.status({
+          fill: "red",
+          shape: "dot",
+          text: "node must be at the beginning of the flow!",
+        });
         done(
           new Error(
             "This node is not designed to be used in the middle of a flow. It should be the first node in a flow.",
