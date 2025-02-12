@@ -81,7 +81,6 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
 def serve():
     port = 50051
-    flask_port = port + 1
 
     logger.info(f"Starting gRPC server on port {port}")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -89,9 +88,6 @@ def serve():
     server.add_insecure_port(f"[::]:{port}")
     server.start()
     logger.info("gRPC server started")
-
-    flask_app.run(port=flask_port, host="0.0.0.0")
-    logger.info("Flask server started")
 
     server.wait_for_termination()
     logger.info("gRPC server stopped")
