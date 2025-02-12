@@ -1,72 +1,15 @@
 <script type="text/javascript">
-  const hostname = new URL(window.location.href).hostname;
-  const flaskUrl = `http://${hostname}:${50052}`;
-
-  function onButtonClick(node) {
-    $.ajax({
-      url: `${flaskUrl}/api/start-flow/${node.id}`,
-      type: "POST",
-      data: JSON.stringify({
-        node_id: node.id,
-        flow_name: node.flow_name,
-      }),
-      contentType: "application/json",
-      success: function (data) {
-        RED.notify("Successfully started the flow!", {
-          type: "success",
-          id: "start-flow",
-          timeout: 2000,
-        });
-      },
-      error: function (jqXHR) {
-        if (jqXHR.status === 404) {
-          RED.notify("Please deploy the flow first.", {
-            type: "error",
-            timeout: 2000,
-          });
-        } else if (jqXHR.status === 500) {
-          RED.notify("Please check the logs for more information.", {
-            type: "error",
-            timeout: 2000,
-          });
-        } else if (jqXHR.status === 0) {
-          RED.notify("No response from the backend.", {
-            type: "error",
-            id: "start-flow",
-            timeout: 2000,
-          });
-        } else {
-          RED.notify("An unexpected error occurred.", {
-            type: "error",
-            timeout: 2000,
-          });
-        }
-      },
-    });
-  }
-
   RED.nodes.registerType("start-flow", {
     category: "flows",
     color: "#a6bbcf",
     defaults: {
       flow_name: { value: "Unnamed Flow" },
     },
-    inputs: 0,
+    inputs: 1,
     outputs: 1,
     icon: "inject.svg",
     label: function () {
-      return `Start ${this.flow_name}`;
-    },
-    button: {
-      enabled: function () {
-        return !this.changed;
-      },
-      onclick: function () {
-        if (this.changed) {
-          return;
-        }
-        return onButtonClick(this);
-      },
+      return `Beginning of ${this.flow_name}`;
     },
   });
 </script>
@@ -80,12 +23,9 @@
 </script>
 
 <script type="text/html" data-help-name="start-flow">
-  <p>Denotes the start of a flow, with the ability to start it directly.</p>
+  <p>Denotes the start of a flow.</p>
   <p>
-    Since <b>flows do not run in Node-RED</b> (they run in the Python backend),
-    clicking this node tells the Python backend to run this flow.
-    <br />
-    After starting a flow, changes made to the flow won't take effect until the
-    next run.
+    This node <b>must</b> be the first node in a flow you wish to run. When this
+    node is fired, the entire flow is archived and sent to the backend.
   </p>
 </script>
