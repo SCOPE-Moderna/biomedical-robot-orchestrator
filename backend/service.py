@@ -9,6 +9,7 @@ import grpc
 from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
+from db import FlowRun
 
 from psycopg import connect, Connection
 
@@ -19,31 +20,37 @@ conn: Connection
 xpeel = XPeel("192.168.0.201", 1628)
 
 
+def instrumentmethod(func, instrument_id: str):
+    def wrapper(*args, **kwargs):
+        # Get FlowRun ID from args
+        # args: self, request, context. we will require that requests have flow_id.
+        flow_id = args[1].flow_id
+        run = FlowRun.fetch_from_id(int(flow_id))
+        if run.status != "running":
+            msg = f"FlowRun {run.id} is not running"
+            logger.error(msg)
+            func(*args, **kwargs, error = msg)
+            return
+        # Check placement of current node in flow graph
+        if run.current_node_id !=
+        # If current node is ahead of this node, skip call
+        # If current node is one before this node, update current node to this node and execute
+        # TODO: If current node is more than one behind this node, return error
+
+        result = func(*args, **kwargs)
+        logger.info(f"{func.__name__} returned: {result}")
+        return result
+
+    return wrapper
+
 class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
         logger.info(f"Received ping: {request.message}")
         return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
 
     def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
-        logger.info("Received StartFlow request")
-        start_node = graph.get_node(request.start_node_id)
-        forward_node_ids: set[str] = {start_node.id}
-        if start_node is None:
-            logger.error(f"Node {request.start_node_id} not found")
-            return node_connector_pb2.StartFlowResponse(success=False, message=f"Start node (id {request.start_node_id}) not found")
-
-        def all_future_nodes(node: Node):
-            next_nodes = node.next_nodes()
-            if next_nodes is None:
-                return
-
-            for next_node in next_nodes:
-                forward_node_ids.add(next_node.id)
-                all_future_nodes(next_node)
-
-        logger.debug(f"All nodes in this run: {forward_node_ids}")
-        logger.info("StartFlow response: success")
-        return node_connector_pb2.StartFlowResponse(success=True, message="Flow started successfully", run_id="test-run-id")
+        run = FlowRun.new_from_start_node_id(request.start_node_id)
+        return node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
 
     def XPeelStatus(self, request, context):
         logger.info("Received XPeelStatus request")
