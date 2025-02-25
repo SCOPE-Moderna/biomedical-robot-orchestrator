@@ -16,6 +16,7 @@ def create_tables_if_missing() -> None:
     with conn.cursor() as cur:
         cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
         tables = cur.fetchall()
+        tables = [table[0] for table in tables]
 
         if "flow_runs" not in tables:
             logger.info("Creating missing table flow_runs")
