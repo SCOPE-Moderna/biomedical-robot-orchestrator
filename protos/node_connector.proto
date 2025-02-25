@@ -18,8 +18,14 @@ message StartFlowRequest {
 
 message StartFlowResponse {
   bool success = 1;
-  string message = 2;
+  optional string message = 2;
   string run_id = 3;
+}
+
+message Metadata {
+  string executing_node_id = 1;
+  string run_id = 2;
+
 }
 
 message Empty {}
