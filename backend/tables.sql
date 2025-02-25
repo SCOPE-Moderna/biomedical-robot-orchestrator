@@ -37,6 +37,8 @@ CREATE TABLE instruments
     name              TEXT NOT NULL,
     type              TEXT NOT NULL,
     connection_method TEXT NOT NULL,
+    connection_info   JSONB,
+    in_use_by         INTEGER REFERENCES node_runs (id),
     created_at        TEXT NOT NULL,
     updated_at        TIMESTAMP DEFAULT NOW()
 );

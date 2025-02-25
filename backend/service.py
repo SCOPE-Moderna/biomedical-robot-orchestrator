@@ -32,7 +32,7 @@ def instrumentmethod(func, instrument_id: str):
             func(*args, **kwargs, error = msg)
             return
         # Check placement of current node in flow graph
-        if run.current_node_id !=
+        # if run.current_node_id !=
         # If current node is ahead of this node, skip call
         # If current node is one before this node, update current node to this node and execute
         # TODO: If current node is more than one behind this node, return error
