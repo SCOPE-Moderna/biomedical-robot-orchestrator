@@ -7,6 +7,7 @@ from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
 logger = logging.getLogger(__name__)
 
+
 class XPeelMessage:
     def __init__(self, msg):
 

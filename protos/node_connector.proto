@@ -4,6 +4,8 @@ import "xpeel.proto";
 
 message PingRequest {
   string message = 1;
+
+  Metadata metadata = 100;
 }
 
 message PingResponse {
@@ -14,18 +16,19 @@ message PingResponse {
 message StartFlowRequest {
   string start_node_id = 1;
   string flow_name = 2;
+
+  Metadata metadata = 100;
 }
 
 message StartFlowResponse {
   bool success = 1;
-  optional string message = 2;
+  string message = 2;
   string run_id = 3;
 }
 
 message Metadata {
   string executing_node_id = 1;
-  string run_id = 2;
-
+  string node_run_id = 2;
 }
 
 message Empty {}
