@@ -1,7 +1,7 @@
 import rtde_receive
 import rtde_control
 import rtde_io
-from device_abc import generalized_input
+from backend.device_abc import generalized_input
 
 class UR3_test_controller_1:
     device_ip = "192.168.0.205"

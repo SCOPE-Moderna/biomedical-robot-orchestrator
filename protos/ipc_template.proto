@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+message GeneralizedFunctionInput{
+  int32 x_position = 1;
+  int32 y_position = 2;
+  int32 waypoint_number = 3;
+  string string_input = 4;
+  string ip_add = 5;
+  string sub_function_name = 6;
+}
+
+message CommandRequest {
+  int32 client_pid =1;
+  string command = 2;  // Command name
+}
+
+message CommandResponse {
+  GeneralizedFunctionInput FunctionInput = 1;   // Response from the 32-bit process
+}
+
+message StatusUpdate {
+  //some data
+  int32 client_pid = 1;
+  string status_message = 2;
+}
+
+message StatusUpdateResponse{
+
+}
+
+
+
+
+service IpcCommunicationService {
+  // Example method to execute a command
+  rpc GetCommand(CommandRequest) returns (stream CommandResponse);
+  rpc ReportStatus(stream StatusUpdate) returns (StatusUpdateResponse);
+}
