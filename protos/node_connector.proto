@@ -4,28 +4,47 @@ import "xpeel.proto";
 
 message PingRequest {
   string message = 1;
+
+  RequestMetadata metadata = 100;
 }
 
 message PingResponse {
   bool success = 1;
   string message = 2;
+
+  ResponseMetadata metadata = 100;
 }
 
 message StartFlowRequest {
   string start_node_id = 1;
   string flow_name = 2;
+
+  RequestMetadata metadata = 100;
 }
 
 message StartFlowResponse {
   bool success = 1;
-  optional string message = 2;
+  string message = 2;
   string run_id = 3;
+
+  ResponseMetadata metadata = 100;
 }
 
-message Metadata {
+message RequestMetadata {
   string executing_node_id = 1;
-  string run_id = 2;
+  string flow_run_id = 2;
+}
 
+message GenericMessageWithRequestMetadata {
+  RequestMetadata metadata = 100;
+}
+
+message ResponseMetadata {
+  bool success = 1;
+}
+
+message GenericMessageWithResponseMetadata {
+  ResponseMetadata metadata = 100;
 }
 
 message Empty {}
