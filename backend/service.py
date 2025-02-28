@@ -9,7 +9,7 @@ import grpc
 from flows.graph import FlowsGraph
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
-from backend.db.flow_runs import FlowRun
+from db.flow_runs import FlowRun
 
 from psycopg import connect, Connection
 
