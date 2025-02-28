@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message RequestMetadata {
+    string executing_node_id = 1;
+    string flow_run_id = 2;
+}
+  // DO NOT USE vvv
+message GenericMessageWithRequestMetadata {
+RequestMetadata metadata = 100;
+}
+  
+message ResponseMetadata {
+bool success = 1;
+}
+  // DO NOT USE vvv
+message GenericMessageWithResponseMetadata {
+ResponseMetadata metadata = 100;
+}
