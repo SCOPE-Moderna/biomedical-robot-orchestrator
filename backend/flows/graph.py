@@ -101,6 +101,7 @@ class Node:
         self.graph = graph
         self.raw_node = raw_node
         self.id = self.raw_node["id"]
+        self.node_type = self.raw_node["type"]
 
     @property
     def has_wires(self) -> bool:
@@ -115,6 +116,25 @@ class Node:
             return None
 
         return [Node(self.graph, self.graph.raw_graph[output_id]) for output_id in output_ids]
+
+    def next_vestra_node(self, output_index = 0) -> Node | None:
+        if not self.has_wires:
+            return None
+
+        output_ids = self.raw_node["wires"][output_index]
+        if len(output_ids) == 0:
+            return None
+
+        for output_id in output_ids:
+            node = Node(self.graph, self.graph.raw_graph[output_id])
+            if node.is_vestra_node:
+                return node
+
+        return None
+
+    @property
+    def is_vestra_node(self):
+        return self.node_type.startswith("vestra")
 
     def __repr__(self) -> str:
         return f"<Node id={self.raw_node['id']} type={self.raw_node['type']}>"

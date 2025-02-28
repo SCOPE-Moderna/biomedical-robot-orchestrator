@@ -6,10 +6,10 @@ from concurrent import futures
 
 import grpc
 
-from flows.graph import FlowsGraph, Node
+from flows.graph import FlowsGraph
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
-from db import FlowRun
+from db.flow_runs import FlowRun
 
 from psycopg import connect, Connection
 
@@ -20,38 +20,63 @@ conn: Connection
 xpeel = XPeel("192.168.0.201", 1628)
 
 
-def instrumentmethod(func, instrument_id: str):
+def flowmethod(func):
     def wrapper(*args, **kwargs):
+        # self = args[0]
+        request: node_connector_pb2.GenericMessageWithRequestMetadata = args[1]
+        # context = args[2]
+
         # Get FlowRun ID from args
         # args: self, request, context. we will require that requests have flow_id.
-        flow_id = args[1].flow_id
-        run = FlowRun.fetch_from_id(int(flow_id))
+        if not request.HasField("metadata"):
+            logger.error("Request does not have metadata", request)
+            func(*args, **kwargs, error="Request does not have metadata")
+            return
+
+        reqMetadata: node_connector_pb2.RequestMetadata = request.metadata
+        run = FlowRun.fetch_from_id(int(reqMetadata.flow_run_id))
         if run.status != "running":
             msg = f"FlowRun {run.id} is not running"
             logger.error(msg)
-            func(*args, **kwargs, error = msg)
+            func(*args, **kwargs, error=msg)
             return
+
         # Check placement of current node in flow graph
         # if run.current_node_id !=
         # If current node is ahead of this node, skip call
         # If current node is one before this node, update current node to this node and execute
         # TODO: If current node is more than one behind this node, return error
 
-        result = func(*args, **kwargs)
+        # query graph for current node
+        current_node = graph.get_node(run.current_node_id)
+        next_vestra_node = current_node.next_vestra_node()
+
+        if not next_vestra_node:
+            # end of flow
+            pass
+
+        result: node_connector_pb2.GenericMessageWithResponseMetadata = func(
+            *args, **kwargs
+        )
         logger.info(f"{func.__name__} returned: {result}")
+
         return result
 
     return wrapper
 
+
 class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     def Ping(self, request, context):
         logger.info(f"Received ping: {request.message}")
-        return node_connector_pb2.PingResponse(message=f"Pong ({request.message})", success=True)
+        return node_connector_pb2.PingResponse(
+            message=f"Pong ({request.message})", success=True
+        )
 
     def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
-        run = FlowRun.new_from_start_node_id(request.start_node_id)
+        run = FlowRun.create(request.start_node_id)
         return node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
 
+    @flowmethod
     def XPeelStatus(self, request, context):
         logger.info("Received XPeelStatus request")
         msg = xpeel.status()
@@ -83,15 +108,18 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelTapeRemaining response: {msg}")
         return xpeel_pb2.XPeelTapeRemainingResponse(
             deseals_remaining=int(msg.payload[0]) * 10,
-            take_up_spool_space_remaining=int(msg.payload[1]) * 10
+            take_up_spool_space_remaining=int(msg.payload[1]) * 10,
         )
+
 
 def serve():
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(NodeConnectorServicer(), server)
+    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
+        NodeConnectorServicer(), server
+    )
     server.add_insecure_port(f"[::]:{port}")
     server.start()
     logger.info("gRPC server started")
