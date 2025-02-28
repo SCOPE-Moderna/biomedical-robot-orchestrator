@@ -72,4 +72,6 @@ class MiddlewareReception(node_connector_pb2_grpc.NodeConnectorServicer):
     # retrieve flow from flow id recieved from orchestrator
     # SC: check if flow is 'in progress' and current node is consistent with current node id
         # throw err if not
-
+    def ContinueFlow(*args, **kwargs):
+        request = args[1]
+        
