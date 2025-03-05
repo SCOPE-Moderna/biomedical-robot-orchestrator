@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "node:path";
 import type { Plugin } from "vite";
 import type { OutputBundle, NormalizedOutputOptions } from "rollup";
+import { c } from "vite/dist/node/moduleRunnerTransport.d-CXw_Ws6P";
 
 export interface VitePluginNodeRedOptions {
   packageName?: string;
@@ -69,6 +70,10 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
       // Add each output file to package.node_red.nodes
       for (const [fileName, assetInfo] of Object.entries(bundle)) {
         if (assetInfo.type === "chunk" && assetInfo.isEntry) {
+          if (!assetInfo.name.endsWith(pluginOptions.nodeJsEntrySuffix)) {
+            continue;
+          }
+
           const nodeName = assetInfo.name.slice(
             0,
             -pluginOptions.nodeJsEntrySuffix.length,
