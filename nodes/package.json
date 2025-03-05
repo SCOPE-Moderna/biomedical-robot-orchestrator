@@ -25,7 +25,7 @@
   "scripts": {
     "format": "prettier --write nodes --ignore-path .gitignore",
     "lint": "prettier --check nodes --ignore-path .gitignore",
-    "compile": "tsc -p .",
+    "compile": "yarn vite build",
     "protos": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_out=./node_connector_pb2 ../protos/node_connector.proto"
   },
   "dependencies": {
