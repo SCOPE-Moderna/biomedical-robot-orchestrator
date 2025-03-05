@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import fs from "fs";
 import { resolve } from "path";
 import nodeRedPlugin from "./vite-plugin-node-red";
+import { builtinModules } from "module";
 
 function getEntries(): Record<string, string> {
   const nodesDir = resolve(__dirname, "nodes");
@@ -20,7 +21,7 @@ function getEntries(): Record<string, string> {
     entries[`${subdir}`] = resolve(`./nodes/${subdir}/${subdir}.html`);
   });
 
-  console.log(entries);
+  // console.log(entries);
 
   return entries;
 }
@@ -28,6 +29,7 @@ function getEntries(): Record<string, string> {
 export default defineConfig({
   base: "/resources/nodes/",
   build: {
+    // target: "node16",
     emptyOutDir: true,
     minify: false,
     rollupOptions: {
@@ -39,6 +41,7 @@ export default defineConfig({
         // assetFileNames: "[name]-[hash][extname]",
       },
       plugins: [nodeRedPlugin()],
+      external: [...builtinModules],
     },
     assetsDir: "resources",
     outDir: "dist",

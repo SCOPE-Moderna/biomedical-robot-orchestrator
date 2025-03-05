@@ -48,7 +48,7 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
 
           // Update import path to import from the resources directory (2 levels up)
           file.code = file.code.replace(
-            /(import\s+[^'"]*['"])([^'"]+)(['"])/g,
+            /(import\s+[^'"]*['"])([^'"]+\.js)(['"])/g,
             (match, p1, modulePath, p3) => `${p1}../.${modulePath}${p3}`,
           );
         }
