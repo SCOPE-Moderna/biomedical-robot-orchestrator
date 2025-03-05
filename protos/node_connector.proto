@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "metadata.proto";
 import "xpeel.proto";
 
 message PingRequest {
@@ -19,7 +20,7 @@ message StartFlowRequest {
   string start_node_id = 1;
   string flow_name = 2;
 
-  RequestMetadata metadata = 100;
+  // RequestMetadata metadata = 100;
 }
 
 message StartFlowResponse {
@@ -27,23 +28,6 @@ message StartFlowResponse {
   string message = 2;
   string run_id = 3;
 
-  ResponseMetadata metadata = 100;
-}
-
-message RequestMetadata {
-  string executing_node_id = 1;
-  string flow_run_id = 2;
-}
-
-message GenericMessageWithRequestMetadata {
-  RequestMetadata metadata = 100;
-}
-
-message ResponseMetadata {
-  bool success = 1;
-}
-
-message GenericMessageWithResponseMetadata {
   ResponseMetadata metadata = 100;
 }
 

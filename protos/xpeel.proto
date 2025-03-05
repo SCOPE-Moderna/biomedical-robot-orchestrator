@@ -1,9 +1,13 @@
 syntax = "proto3";
 
+import "metadata.proto";
+
 message XPeelStatusResponse {
   int32 error_code_1 = 1;
   int32 error_code_2 = 2;
   int32 error_code_3 = 3;
+
+  ResponseMetadata metadata = 100;
 }
 
 message XPeelXPeelRequest {
@@ -28,10 +32,13 @@ message XPeelXPeelRequest {
   // 3 = 7.5 seconds
   // 4 = 10 seconds
   int32 adhere_time = 2;
+
+  RequestMetadata metadata = 100;
 }
 
 message XPeelSealCheckResponse {
   bool seal_detected = 1;
+  ResponseMetadata metadata = 100;
 }
 
 message XPeelTapeRemainingResponse {
@@ -39,4 +46,5 @@ message XPeelTapeRemainingResponse {
   int32 deseals_remaining = 1;
   // Number of “deseals” that can be held on the space remaining on the take-up spool
   int32 take_up_spool_space_remaining = 2;
+  ResponseMetadata metadata = 100;
 }

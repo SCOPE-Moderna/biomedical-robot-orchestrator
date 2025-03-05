@@ -10,12 +10,10 @@ from flows.graph import FlowsGraph
 from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
 from xpeel import XPeel
 from db.flow_runs import FlowRun
-
-from psycopg import connect, Connection
+from db.conn import conn
 
 logger = logging.getLogger(__name__)
 
-conn: Connection
 
 xpeel = XPeel("192.168.0.201", 1628)
 
@@ -73,7 +71,9 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         )
 
     def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
+        logger.info("Received StartFlow request")
         run = FlowRun.create(request.start_node_id)
+        logger.info(f"Starting run: {run.id}")
         return node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
 
     @flowmethod
@@ -133,14 +133,11 @@ if __name__ == "__main__":
     graph = FlowsGraph("/home/aquarium/.node-red")
 
     logger.info(f"Connecting to database")
-    conn = connect("postgres://vestradb_user:veggie_straws@127.0.0.1:5432/vestradb")
     logger.info(f"Connected to database")
     logger.info(f"Making test query")
     with conn.cursor() as cur:
         data = cur.execute("SELECT * FROM test_table").fetchall()
         print(data)
         logger.info(f"Test query successful")
-
-    conn.close()
 
     serve()
