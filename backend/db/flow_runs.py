@@ -10,14 +10,14 @@ class FlowRun:
         self,
         id: int,
         name: str,
-        start_flow_node_id: str,
+        start_node_id: str,
         current_node_id: str,
         started_at: datetime,
         status: str,
     ):
         self.id = id
         self.name = name
-        self.start_flow_node_id = start_flow_node_id
+        self.start_flow_node_id = start_node_id
         self.current_node_id = current_node_id
         self.started_at = started_at
         self.status = status
