@@ -152,7 +152,7 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
           //   nodeName,
           // });
           // Use the file name as the key and its relative path as the value.
-          pkg.node_red.nodes[nodeName] = assetInfo.fileName;
+          pkg["node-red"].nodes[nodeName] = assetInfo.fileName;
         }
       }
 
