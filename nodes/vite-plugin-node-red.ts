@@ -2,7 +2,8 @@ import { promises as fs } from "fs";
 import path from "node:path";
 import type { Plugin } from "vite";
 import type { OutputBundle, NormalizedOutputOptions } from "rollup";
-import { c } from "vite/dist/node/moduleRunnerTransport.d-CXw_Ws6P";
+import { readFile } from "node:fs/promises";
+import { transformWithEsbuild } from "vite";
 
 export interface VitePluginNodeRedOptions {
   packageName?: string;
@@ -23,6 +24,73 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
 
   return {
     name: "vite-node-red-plugin",
+    transform: {
+      order: "pre",
+      handler: async (code, id) => {
+        // Only process HTML files.
+        if (!id.endsWith(".html")) return null;
+
+        let html = code;
+        // Regex to match <script> tags with a src attribute.
+        // Matches tags like:
+        // <script ... type="module" ... src="..."></script>
+        const scriptRegex =
+          /<script\s+([^>]*?)src\s*=\s*['"]([^'"]+)['"]([^>]*?)>(.*?)<\/script>/g;
+        let match;
+
+        console.log("Processing HTML file:", id);
+
+        if (
+          id ===
+          "/Users/sammendelson/Documents/GitHub/biomedical-robot-orchestrator/nodes/nodes/grpc-ping/grpc-ping.html"
+        ) {
+          console.log("HTML:", html);
+        }
+        while ((match = scriptRegex.exec(html)) !== null) {
+          const [fullMatch, attrBefore, src, attrAfter] = match;
+          const combinedAttrs = attrBefore + attrAfter;
+
+          // Only process tags that have type="module"
+          if (!/\btype\s*=\s*['"]module['"]/.test(combinedAttrs)) {
+            continue;
+          }
+
+          console.log("Processing script tag with src:", src);
+
+          // Resolve the file path relative to the current HTML file.
+          const filePath = path.resolve(path.dirname(id), src);
+          let fileContent;
+          try {
+            fileContent = await readFile(filePath, "utf8");
+          } catch (error) {
+            console.error(`Failed to read file at ${filePath}:`, error);
+            continue;
+          }
+
+          // Use Vite's transformation pipeline to compile the JS file.
+          let transformed;
+          try {
+            transformed = await transformWithEsbuild(fileContent, filePath);
+          } catch (error) {
+            console.error(`Error transforming file ${filePath}:`, error);
+            transformed = { code: fileContent };
+          }
+
+          const attrs = (attrBefore + attrAfter).replaceAll(
+            `type="module"`,
+            `type="text/javascript"`,
+          );
+
+          // Create the inline script tag with the transformed code.
+          const inlineScriptTag = `<script ${attrs}>${transformed.code}</script>`;
+
+          // Replace the original <script src="..."> tag with the inline version.
+          html = html.replace(fullMatch, inlineScriptTag);
+        }
+
+        return html;
+      },
+    },
     generateBundle(options, bundle) {
       Object.entries(bundle).forEach(([fileName, file]) => {
         if (file.type === "chunk" && file.facadeModuleId?.endsWith(".html")) {
@@ -78,11 +146,11 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
             0,
             -pluginOptions.nodeJsEntrySuffix.length,
           );
-          console.log({
-            name: assetInfo.name,
-            fileName: assetInfo.fileName,
-            nodeName,
-          });
+          // console.log({
+          //   name: assetInfo.name,
+          //   fileName: assetInfo.fileName,
+          //   nodeName,
+          // });
           // Use the file name as the key and its relative path as the value.
           pkg.node_red.nodes[nodeName] = assetInfo.fileName;
         }
