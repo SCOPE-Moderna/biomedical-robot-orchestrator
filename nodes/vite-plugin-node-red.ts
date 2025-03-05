@@ -129,7 +129,7 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
       const pkg = {
         name: pluginOptions.packageName,
         version: "1.0.0",
-        node_red: {
+        "node-red": {
           nodes: {},
         },
         dependencies: {},
