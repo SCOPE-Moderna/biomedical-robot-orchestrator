@@ -13,8 +13,6 @@ const service = new NodeConnectorClient(
   undefined,
 );
 
-
-
 module.exports = function (RED: NodeAPI) {
   function XPeelStatusNodeConstructor(this: Node, config: TestNodeDef): void {
     RED.nodes.createNode(this, config);
@@ -23,13 +21,13 @@ module.exports = function (RED: NodeAPI) {
       // check if any XPeel device is available - check python xpeel queue
 
       // if no available:
-        // set Node-RED status to variation on "waiting"
-        // this.status({ fill: "gray", shape: "ring", text: "waiting to run." });
-        // check status of device(s)
+      // set Node-RED status to variation on "waiting"
+      // this.status({ fill: "gray", shape: "ring", text: "waiting to run." });
+      // check status of device(s)
 
       // if available:
-        // set xpeel queue to "in-use" & Node-RED status to "connected"
-        // this.status({ fill: "green", shape: "ring", text: "running." });
+      // set xpeel queue to "in-use" & Node-RED status to "connected"
+      // this.status({ fill: "green", shape: "ring", text: "running." });
       const payload = (msg.payload as string | number).toString();
       service.XPeelStatus(new Empty(), (error, response) => {
         if (error) {
