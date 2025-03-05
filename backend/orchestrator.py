@@ -55,7 +55,6 @@ class Orchestrator:
         noderun.set_status('waiting')
 
         # Wait for the node_run_id to be called from the queue
-        # TODO: implement get_in_use_by in db.Instrument
         db_instrument = Instrument.fetch_from_id(instrument)
         while db_instrument.in_use_by != noderun_id:
             await asyncio.sleep(self.sleep_time)
