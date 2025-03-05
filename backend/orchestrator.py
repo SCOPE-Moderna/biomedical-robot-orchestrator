@@ -14,8 +14,27 @@ class Orchestrator:
         self.ur3 = UR_Robot(addr, port) # TODO: set ur3 address and port
         self.sleep_time = 5 # Set async sleep time to 5 seconds
 
+    async def check_queues(self):
+        # NOTE: Infinite loop
+        while True:
+            # For each instrument
+            for instr in (self.xpeel, self.ur3):
 
-    async def run_node(self, noderun_id: str):
+                # TODO: add ID property to instrument classes
+                db_instr = Instrument.fetch_from_id(instr.id)
+
+                # Get the first item from the queue if the instrument is not in use
+                # NOTE: This assumes instrument queues are implemented in each instrument class. Each instance must have its own queue.
+                # TODO: Implement instrument queues
+                if db_instr.in_use_by is None or db_instr.in_use_by.status == 'completed':
+                    if instr.q.qsize() > 0:
+                        next_noderun_id = instr.q.get()
+                        db_instr.set_in_use_by(next_noderun_id)
+
+            # Wait before trying to get things from the queue again
+            await asyncio.sleep(self.sleep_time)
+
+    async def run_node(self, noderun_id: str, movement=False):
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.fetch_from_id(noderun_id)
@@ -29,6 +48,7 @@ class Orchestrator:
 
         # Add node_run_id to instrument queue
         # NOTE: This assumes instrument queues are implemented in each instrument class. Each instance must have its own queue.
+        # TODO: Implement instrument queues
         instrument.q.put(noderun_id)
 
         # Set status of this node in the database to "waiting"
@@ -36,7 +56,8 @@ class Orchestrator:
 
         # Wait for the node_run_id to be called from the queue
         # TODO: implement get_in_use_by in db.Instrument
-        while Instrument.get_in_use_by(instrument) != noderun_id:
+        db_instrument = Instrument.fetch_from_id(instrument)
+        while db_instrument.in_use_by != noderun_id:
             await asyncio.sleep(self.sleep_time)
 
         # Get plate locations associated with this node
@@ -105,5 +126,9 @@ class Orchestrator:
 
         # Complete Node Run
         noderun.complete(noderun_id)
+
+        if movement is True:
+            for loc in platelocation_source:
+                loc.set_in_use_by(None)
 
         return function_result
