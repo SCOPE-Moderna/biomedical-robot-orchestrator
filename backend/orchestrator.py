@@ -15,7 +15,7 @@ class Orchestrator:
         self.sleep_time = 5 # Set async sleep time to 5 seconds
 
 
-    async def run_execution_node(self, noderun_id: str):
+    async def run_node(self, noderun_id: str):
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.fetch_from_id(noderun_id)
@@ -54,6 +54,8 @@ class Orchestrator:
             for loc in platelocation_source:
 
                 # If the plate location has never been used or if it was used but the operation is complete
+                # NOTE: allowing an empty plate location to be considered "filled" could cause strange behavior. 
+                # This functionality is allowed in order to be flexible for starting flows and pausing/restarting.
                 if loc.in_use_by is None or loc.in_use_by.status == 'completed':
                     continue
 
@@ -70,7 +72,7 @@ class Orchestrator:
                 
             # For each destination plate location
             for loc in platelocation_destination:
-                if loc.in_use_by is None:
+                if loc.in_use_by is None: # If destination location is empty
                     continue
                 elif loc.in_use_by.status == 'failed':
                     raise ValueError(f"Status failed in node {loc.in_use_by} detected at plate location {loc}")
@@ -92,10 +94,16 @@ class Orchestrator:
         # Set Node Run status to "in_progress"
         noderun.set_status('in_progress')
 
-        # Execute node function
+        # Set source and destination plates to in use by this node
+        for loc in platelocation_source:
+            loc.set_in_use_by(noderun_id)
+        for loc in platelocation_destination:
+            loc.set_in_use_by(noderun_id)
+
+        # Run function on instrument
         function_result = getattr(instrument, node_info['function'])()
 
         # Complete Node Run
-        NodeRun.complete(noderun_id)
+        noderun.complete(noderun_id)
 
         return function_result
