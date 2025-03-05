@@ -12,9 +12,10 @@ class Orchestrator:
         # FIXME: Make instruments initialize properly
         self.xpeel = XPeelConnector(addr, port) # TODO: set xpeel address and port
         self.ur3 = UR_Robot(addr, port) # TODO: set ur3 address and port
+        self.sleep_time = 5 # Set async sleep time to 5 seconds
 
 
-    def run_execution_node(self, noderun_id: str):
+    async def run_execution_node(self, noderun_id: str):
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.fetch_from_id(noderun_id)
@@ -36,24 +37,57 @@ class Orchestrator:
         # Wait for the node_run_id to be called from the queue
         # TODO: implement get_in_use_by in db.Instrument
         while Instrument.get_in_use_by(instrument) != noderun_id:
-            asyncio.sleep(5)
+            await asyncio.sleep(self.sleep_time)
 
         # Get plate locations associated with this node
         platelocation_source = PlateLocation.fetch_from_ids(node_info['source_plate_locations'])
         platelocation_destination = PlateLocation.fetch_from_ids(node_info['destination_plate_locations'])
 
         # Check that source plate locations are filled
-        for loc in platelocation_source:
+        while True:
 
-            # Check that the source plate location is loaded
-            # TODO: Check other cases
-            if loc.in_use_by is None:
-                raise ValueError(f"Source plate location {loc.id} never loaded")
-            
+            # Track number of actively used plate locations
+            source_in_progress_count = 0
+            destination_in_progress_count = 0
 
-        # Check that destination plate locations are available (only for movement nodes)
-        for loc in platelocation_destination:
-            continue
+            # For each source plate location
+            for loc in platelocation_source:
+
+                # If the plate location has never been used or if it was used but the operation is complete
+                if loc.in_use_by is None or loc.in_use_by.status == 'completed':
+                    continue
+
+                # If the plate location has was used by a node that failed
+                elif loc.in_use_by.status == 'failed':
+                    raise ValueError(f"Status failed in node {loc.in_use_by} detected at plate location {loc}")
+                
+                # If the location is actively in use
+                elif loc.in_use_by.status in ('in_progress', 'waiting', 'paused'):
+                    in_progress_count += 1
+
+                else:
+                    raise ValueError(f"Unrecognized status {loc.in_use_by.status} in node {loc.in_use_by}")
+                
+            # For each destination plate location
+            for loc in platelocation_destination:
+                if loc.in_use_by is None:
+                    continue
+                elif loc.in_use_by.status == 'failed':
+                    raise ValueError(f"Status failed in node {loc.in_use_by} detected at plate location {loc}")
+                elif loc.in_use_by.status in ('completed', 'in_progress', 'waiting', 'paused'):
+                    destination_in_progress_count += 1
+                else:
+                    raise ValueError(f"Unrecognized status {loc.in_use_by.status} in node {loc.in_use_by}")
+
+            # If any of the plate locations were being used, wait for them to no longer be in use
+            if source_in_progress_count > 0:
+                while any(loc.in_use_by is not None and loc.in_use_by.status in ('in_progress', 'waiting', 'paused') for loc in platelocation_source):
+                    await asyncio.sleep(self.sleep_time)
+            elif destination_in_progress_count > 0:
+                while any(loc.in_use_by is not None for loc in platelocation_destination):
+                    await asyncio.sleep(self.sleep_time)
+            else:
+                break
 
         # Set Node Run status to "in_progress"
         noderun.set_status('in_progress')
