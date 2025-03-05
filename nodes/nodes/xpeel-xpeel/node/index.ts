@@ -2,9 +2,9 @@ import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
 import {
   NodeConnectorClient,
   Empty,
-} from "../../node_connector_pb2/node_connector";
+} from "../../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
-import { XPeelXPeelRequest } from "../../node_connector_pb2/xpeel";
+import { XPeelXPeelRequest } from "../../../node_connector_pb2/xpeel";
 
 interface XPeelXPeelNodeDef extends NodeDef {
   set_number: number;

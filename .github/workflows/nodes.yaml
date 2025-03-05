@@ -32,7 +32,7 @@ jobs:
       - name: Copy the nodes to the Node-RED user directory
         run: | 
           rm -rf /home/aquarium/nodes-from-git-repo/nodes
-          cp -r nodes/ /home/aquarium/nodes-from-git-repo/nodes
+          cp -r nodes/dist/ /home/aquarium/nodes-from-git-repo/nodes
 
       - name: Restart Node-RED
         run: sudo systemctl restart nodered.service

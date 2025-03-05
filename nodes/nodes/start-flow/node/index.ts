@@ -2,7 +2,7 @@ import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
 import {
   NodeConnectorClient,
   StartFlowRequest,
-} from "../../node_connector_pb2/node_connector";
+} from "../../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
 
 // interface StartFlowNodeDef extends NodeDef {
