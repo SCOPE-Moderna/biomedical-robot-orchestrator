@@ -26,7 +26,7 @@ module.exports = function (RED: NodeAPI) {
     config: NodeDef,
   ): void {
     RED.nodes.createNode(this, config);
-    const node = this;
+    const node = this as StartFlowNode;
 
     this.on("input", async function (msg: NodeMessage, send, done) {
       // @ts-ignore
@@ -48,6 +48,8 @@ module.exports = function (RED: NodeAPI) {
         start_node_id: node.id,
         flow_name: node.flow_name,
       });
+
+      this.warn(startRequest.toObject());
 
       service.StartFlow(startRequest, (error, response) => {
         if (error) {
