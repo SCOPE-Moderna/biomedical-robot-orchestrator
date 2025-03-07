@@ -1,9 +1,8 @@
 import { promises as fs } from "fs";
 import path from "node:path";
 import type { Plugin } from "vite";
-import type { OutputBundle, NormalizedOutputOptions } from "rollup";
+import type { NormalizedOutputOptions, OutputBundle } from "rollup";
 import { readFile } from "node:fs/promises";
-import { transformWithEsbuild } from "vite";
 
 export interface VitePluginNodeRedOptions {
   packageName?: string;
@@ -142,22 +141,16 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
 
       // Add each output file to package.node_red.nodes
       for (const [fileName, assetInfo] of Object.entries(bundle)) {
-        if (assetInfo.type === "chunk" && assetInfo.isEntry) {
-          if (!assetInfo.name.endsWith(pluginOptions.nodeJsEntrySuffix)) {
-            continue;
-          }
+        if (
+          assetInfo.type === "asset" &&
+          assetInfo.fileName.endsWith(".html")
+        ) {
+          const nodeName = path.parse(assetInfo.fileName).name;
 
-          const nodeName = assetInfo.name.slice(
-            0,
-            -pluginOptions.nodeJsEntrySuffix.length,
+          pkg["node-red"].nodes[nodeName] = assetInfo.fileName.replace(
+            ".html",
+            ".js",
           );
-          // console.log({
-          //   name: assetInfo.name,
-          //   fileName: assetInfo.fileName,
-          //   nodeName,
-          // });
-          // Use the file name as the key and its relative path as the value.
-          pkg["node-red"].nodes[nodeName] = assetInfo.fileName;
         }
       }
 
