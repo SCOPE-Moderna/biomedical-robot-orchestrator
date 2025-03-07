@@ -1,4 +1,4 @@
-import * as proto from "google-protobuf";
+import { BinaryConstants } from "google-protobuf";
 
 RED.nodes.registerType("grpc-ping", {
   category: "custom nodes",
@@ -10,6 +10,6 @@ RED.nodes.registerType("grpc-ping", {
   outputs: 1,
   icon: "file.svg",
   label: function () {
-    return this.name || proto.BinaryConstants.FLOAT32_MAX.toString();
+    return BinaryConstants.FLOAT32_MAX.toString();
   },
 });

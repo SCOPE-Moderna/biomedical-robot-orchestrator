@@ -35,7 +35,7 @@ export default defineConfig({
       // Dynamically generated multi-entry object.
       input: getEntries(),
       output: {
-        entryFileNames: "[name].js",
+        entryFileNames: "[name]-[hash].js",
         // chunkFileNames: "[name].js",
         // assetFileNames: "[name]-[hash][extname]",
       },
