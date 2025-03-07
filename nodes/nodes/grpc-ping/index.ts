@@ -1,4 +1,4 @@
-window.RED.nodes.registerType("lower-case", {
+RED.nodes.registerType("lower-case", {
   category: "custom nodes",
   color: "#CA9258",
   defaults: {

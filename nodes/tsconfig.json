@@ -110,6 +110,6 @@
   },
   "include": [
     "nodes/**/*.ts",
-    "globals.d.ts"
+    "globals.d.ts",
   ]
 }
