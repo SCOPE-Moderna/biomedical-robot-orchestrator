@@ -15,9 +15,9 @@ function getEntries(): Record<string, string> {
 
   subdirs.forEach((subdir) => {
     // Each key is the subfolder name and the value is the absolute path to its index.html.
-    entries[`${subdir}_nodejsfile`] = resolve(
-      `./nodes/${subdir}/node/index.ts`,
-    );
+    // entries[`${subdir}_nodejsfile`] = resolve(
+    //   `./nodes/${subdir}/node/index.ts`,
+    // );
     entries[`${subdir}`] = resolve(`./nodes/${subdir}/${subdir}.html`);
   });
 
@@ -29,7 +29,6 @@ function getEntries(): Record<string, string> {
 export default defineConfig({
   base: "/resources/nodes/",
   build: {
-    // target: "node16",
     emptyOutDir: true,
     minify: false,
     rollupOptions: {
