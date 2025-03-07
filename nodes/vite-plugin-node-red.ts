@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
-import path from "node:path";
-import { type Plugin, transformWithEsbuild } from "vite";
+import * as path from "node:path";
+import { type Plugin } from "vite";
 import type { NormalizedOutputOptions, OutputBundle } from "rollup";
 import { readFile } from "node:fs/promises";
 
