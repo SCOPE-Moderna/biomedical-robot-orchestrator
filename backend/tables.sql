@@ -10,10 +10,11 @@ CREATE TYPE run_status AS ENUM (
 CREATE TABLE flow_runs
 (
     id                 SERIAL PRIMARY KEY,
+    name               TEXT       NOT NULL,
     start_flow_node_id TEXT       NOT NULL,
     current_node_id    TEXT       NOT NULL,
     started_at         TIMESTAMP           DEFAULT NOW(),
-    flow_status        run_status NOT NULL DEFAULT 'in-progress'
+    status             run_status NOT NULL DEFAULT 'in-progress'
 );
 
 -- Node Runs
@@ -26,7 +27,7 @@ CREATE TABLE node_runs
     output_data JSONB,
     started_at  TIMESTAMP           DEFAULT NOW(),
     finished_at TIMESTAMP,
-    status      run_status NOT NULL DEFAULT 'in-progress' -- TODO: Change references to this status to 'node_status' to avoid reserved keyword issues
+    status      run_status NOT NULL DEFAULT 'in-progress'
 );
 
 -- Instruments

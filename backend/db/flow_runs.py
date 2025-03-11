@@ -9,12 +9,14 @@ class FlowRun:
     def __init__(
         self,
         id: int,
+        name: str,
         start_node_id: str,
         current_node_id: str,
         started_at: datetime,
         status: str,
     ):
         self.id = id
+        self.name = name
         self.start_flow_node_id = start_node_id
         self.current_node_id = current_node_id
         self.started_at = started_at
@@ -24,24 +26,25 @@ class FlowRun:
     def fetch_from_id(cls, id: int) -> FlowRun:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, start_flow_node_id, current_node_id, started_at, flow_status FROM flow_runs WHERE id = %s",
+                "SELECT id, name, start_flow_node_id, current_node_id, started_at, status FROM flow_runs WHERE id = %s",
                 (id,),
             )
             row = cur.fetchone()
             return cls(*row)
 
     @classmethod
-    def create(cls, start_flow_node_id: str, status="in-progress") -> FlowRun:
+    def create(cls, name: str, start_flow_node_id: str, status="in-progress") -> FlowRun:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO flow_runs (status, start_flow_node_id, current_node_id) "
-                "VALUES (%s, %s, %s) "
+                "INSERT INTO flow_runs (name, status, start_flow_node_id, current_node_id) "
+                "VALUES (%s, %s, %s, %s) "
                 "RETURNING id, started_at",
-                (status, start_flow_node_id, start_flow_node_id),
+                (name, status, start_flow_node_id, start_flow_node_id),
             )
             [flow_run_id, started_at] = cur.fetchone()
             return cls(
                 flow_run_id,
+                name,
                 start_flow_node_id,
                 start_flow_node_id,
                 started_at,
@@ -62,7 +65,7 @@ class FlowRun:
             query += " AND id = %s"
             params.append(run_id)
         if status is not None:
-            query += " AND flow_status = %s"
+            query += " AND status = %s"
             params.append(status)
         if start_node_id is not None:
             query += " AND start_node_id = %s"
@@ -79,7 +82,7 @@ class FlowRun:
         new_status = status if status is not None else self.status
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE flow_runs SET current_node_id = %s, flow_status = %s WHERE id = %s",
+                "UPDATE flow_runs SET current_node_id = %s, status = %s WHERE id = %s",
                 (current_node_id, self.id),
             )
         self.current_node_id = current_node_id
