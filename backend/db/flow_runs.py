@@ -34,9 +34,9 @@ class FlowRun:
     def create(cls, start_flow_node_id: str, status="running") -> FlowRun:
         with conn.cursor() as cur:
             cur.execute(
-                'INSERT INTO flow_runs VALUES '
-                '(flow_status = %s, start_flow_node_id = %s, current_node_id = %s)'
-                'RETURNING id, started_at',
+                "INSERT INTO flow_runs VALUES "
+                "(flow_status = %s, start_flow_node_id = %s, current_node_id = %s)"
+                "RETURNING id, started_at",
                 (status, start_flow_node_id, start_flow_node_id),
             )
             [flow_run_id, started_at] = cur.fetchone()
