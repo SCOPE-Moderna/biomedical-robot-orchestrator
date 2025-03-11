@@ -10,8 +10,8 @@ class Orchestrator:
 
     def __init__(self):
         # FIXME: Make instruments initialize properly
-        self.xpeel = XPeelConnector(addr, port) # TODO: set xpeel address and port
-        self.ur3 = UR_Robot(addr, port) # TODO: set ur3 address and port
+        self.xpeel = XPeelConnector(addr, port, instr_id) # TODO: set xpeel address and port
+        self.ur3 = UR_Robot(addr, port, instr_id) # TODO: set ur3 address and port
         self.sleep_time = 5 # Set async sleep time to 5 seconds
 
     async def check_queues(self):
@@ -20,12 +20,9 @@ class Orchestrator:
             # For each instrument
             for instr in (self.xpeel, self.ur3):
 
-                # TODO: add ID property to instrument classes
-                db_instr = Instrument.fetch_from_id(instr.id)
+                db_instr = Instrument.fetch_from_id(instr.instr_id)
 
                 # Get the first item from the queue if the instrument is not in use
-                # NOTE: This assumes instrument queues are implemented in each instrument class. Each instance must have its own queue.
-                # TODO: Implement instrument queues
                 if db_instr.in_use_by is None or db_instr.in_use_by.status == 'completed':
                     if instr.q.qsize() > 0:
                         next_noderun_id = instr.q.get()
@@ -47,8 +44,6 @@ class Orchestrator:
         instrument = getattr(self, (node_info['instrument']))
 
         # Add node_run_id to instrument queue
-        # NOTE: This assumes instrument queues are implemented in each instrument class. Each instance must have its own queue.
-        # TODO: Implement instrument queues
         instrument.q.put(noderun_id)
 
         # Set status of this node in the database to "waiting"
@@ -121,7 +116,8 @@ class Orchestrator:
             loc.set_in_use_by(noderun_id)
 
         # Run function on instrument
-        function_result = getattr(instrument, node_info['function'])()
+        # TODO: Make sure the input is structured correctly
+        function_result = instrument.call_node_interface(node_info['function'], node_info['input_data'])
 
         # Complete Node Run
         noderun.complete(noderun_id)

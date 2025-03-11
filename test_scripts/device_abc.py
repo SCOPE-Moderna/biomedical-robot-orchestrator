@@ -10,7 +10,7 @@ import rtde_io
 
 #xpeel
 import socket
-from queue import SimpleQueue
+from queue import SimpleQueue, Queue
 
 class generalized_input:
     x_position = 0
@@ -22,9 +22,11 @@ class generalized_input:
 
 class abstractConnector(ABC):
 
-    def __init__(self,ip_addr,port):
+    def __init__(self, ip_addr, port, instr_id):
         self.ip_addr = ip_addr
         self.port = port
+        self.q = Queue()
+        self.instr_id = instr_id
         self.connect_device()
 
     @abstractmethod
