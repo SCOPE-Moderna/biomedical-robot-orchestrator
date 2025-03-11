@@ -24,7 +24,7 @@ class FlowRun:
     def fetch_from_id(cls, id: int) -> FlowRun:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, start_flow_node_id, current_node_id, started_at, status FROM flow_runs WHERE id = %s",
+                "SELECT id, start_flow_node_id, current_node_id, started_at, flow_status FROM flow_runs WHERE id = %s",
                 (id,),
             )
             row = cur.fetchone()
@@ -35,7 +35,7 @@ class FlowRun:
         with conn.cursor() as cur:
             cur.execute(
                 'INSERT INTO flow_runs VALUES '
-                '("status" = %s, start_flow_node_id = %s, current_node_id = %s)'
+                '(flow_status = %s, start_flow_node_id = %s, current_node_id = %s)'
                 'RETURNING id, started_at',
                 (status, start_flow_node_id, start_flow_node_id),
             )
@@ -62,7 +62,7 @@ class FlowRun:
             query += " AND id = %s"
             params.append(run_id)
         if status is not None:
-            query += " AND status = %s"
+            query += " AND flow_status = %s"
             params.append(status)
         if start_node_id is not None:
             query += " AND start_node_id = %s"
@@ -79,7 +79,7 @@ class FlowRun:
         new_status = status if status is not None else self.status
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE flow_runs SET current_node_id = %s, status = %s WHERE id = %s",
+                "UPDATE flow_runs SET current_node_id = %s, flow_status = %s WHERE id = %s",
                 (current_node_id, self.id),
             )
         self.current_node_id = current_node_id
