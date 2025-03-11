@@ -10,7 +10,6 @@ CREATE TYPE run_status AS ENUM (
 CREATE TABLE flow_runs
 (
     id                 SERIAL PRIMARY KEY,
-    name               TEXT       NOT NULL,
     start_flow_node_id TEXT       NOT NULL,
     current_node_id    TEXT       NOT NULL,
     started_at         TIMESTAMP           DEFAULT NOW(),
