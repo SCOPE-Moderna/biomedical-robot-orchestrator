@@ -33,7 +33,7 @@ def flowmethod(func):
 
         reqMetadata: node_connector_pb2.RequestMetadata = request.metadata
         run = FlowRun.fetch_from_id(int(reqMetadata.flow_run_id))
-        if run.status != "running":
+        if run.status != "in-progress":
             msg = f"FlowRun {run.id} is not running"
             logger.error(msg)
             func(*args, **kwargs, error=msg)
