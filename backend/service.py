@@ -16,10 +16,8 @@ from orchestrator import Orchestrator
 
 logger = logging.getLogger(__name__)
 
-
 xpeel = XPeel("192.168.0.201", 1628)
 
-orchestrator = Orchestrator(xpeel)
 
 def flowmethod(func):
     def wrapper(*args, **kwargs):
@@ -67,6 +65,8 @@ def flowmethod(func):
 
 
 class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
+    orchestrator = None
+
     def Ping(self, request, context):
         logger.info(f"Received ping: {request.message}")
         return node_connector_pb2.PingResponse(
@@ -91,7 +91,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     def XPeelReset(self, request, context):
         logger.info("Received XPeelReset request")
         function_args = {}  # Add any necessary arguments here
-        result = self.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
+        result = NodeConnectorServicer.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
         logger.info(f"XPeelReset response: {result}")
         return result.to_xpeel_status_response()
 
@@ -123,6 +123,8 @@ def serve():
 
     logger.info(f"Starting gRPC server on port {port}")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    orchestrator = Orchestrator(xpeel)
+    NodeConnectorServicer.orchestrator = orchestrator
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
         NodeConnectorServicer(), server
     )
@@ -147,4 +149,4 @@ if __name__ == "__main__":
         logger.info(f"Test query successful")
 
     serve()
-    orchestrator.check_queues()
+    NodeConnectorServicer.orchestrator.check_queues()
