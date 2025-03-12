@@ -44,9 +44,9 @@ class PlateLocation:
                 "RETURNING id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity",
                 (instrument_id, x_capacity, y_capacity),
             )
-            [plate_loc_id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
+            [id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
             return cls(
-                plate_loc_id,
+                id,
                 type,
                 in_use_by,
                 instrument_id,
