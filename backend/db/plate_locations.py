@@ -3,6 +3,8 @@ from __future__ import annotations
 from .node_runs import NodeRun
 from .conn import conn
 
+import uuid
+
 
 class PlateLocation:
     def __init__(
@@ -38,11 +40,12 @@ class PlateLocation:
     @classmethod
     def create(cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1) -> PlateLocation:
         with conn.cursor() as cur:
+            new_id = str(uuid.uuid4())
             cur.execute(
-                "INSERT INTO plate_locations (instrument_id, x_capacity, y_capacity) "
-                "VALUES (%s, %s, %s) "
+                "INSERT INTO plate_locations (id, instrument_id, x_capacity, y_capacity) "
+                "VALUES (%s, %s, %s, %s) "
                 "RETURNING id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity",
-                (instrument_id, x_capacity, y_capacity),
+                (new_id, instrument_id, x_capacity, y_capacity),
             )
             [id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
             return cls(
