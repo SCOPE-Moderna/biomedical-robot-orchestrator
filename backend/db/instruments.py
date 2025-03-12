@@ -12,22 +12,24 @@ class Instrument:
             name: str,
             type: str,
             connection_method: str,
-            connection_data: str | None,
-            status: str,
+            connection_info: str | None,
             in_use_by: int | None,
+            created_at: dt.datetime,
+            updated_at: dt.datetime,
     ):
         self.id = id
         self.name = name
         self.type = type
         self.connection_method = connection_method
-        self.connection_data = connection_data
-        self.status = status
+        self.connection_info = connection_info
         self.in_use_by = in_use_by
+        self.created_at = created_at
+        self.updated_at = updated_at
 
     @classmethod
-    def fetch_from_id(cls, id: int) -> NodeRun:
+    def fetch_from_id(cls, id: int) -> Instrument:
         with conn.cursor() as cur:
-            cur.execute("SELECT * FROM node_runs WHERE id = %s", (id,))
+            cur.execute("SELECT * FROM instruments WHERE id = %s", (id,))
             row = cur.fetchone()
             return cls(*row)
     
@@ -35,18 +37,20 @@ class Instrument:
     def create(cls, name: str = "xpeel_1", type: str = "xpeel", connection_method: str = "serial") -> Instrument:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO instruments (name, type, connection_method, created_at) "
+                "INSERT INTO instruments (name, type, connection_method, created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s) "
-                "RETURNING id, name, type, connection_method, in_use_by, updated_at",
-                (name, type, connection_method, f'{dt.datetime.now()}'),
+                "RETURNING id, name, type, connection_method, connection_info, in_use_by, created_at, updated_at",
+                (name, type, connection_method, f'{dt.datetime.now()}', f'{dt.datetime.now()}'),
             )
-            [instrument_id, name, type, connection_method, in_use_by, updated_at] = cur.fetchone()
+            [instrument_id, name, type, connection_method, connection_info, in_use_by, created_at, updated_at] = cur.fetchone()
             return cls(
                 instrument_id,
                 name,
                 type,
                 connection_method,
+                connection_info,
                 in_use_by,
+                created_at,
                 updated_at,
             )
         
