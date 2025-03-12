@@ -33,11 +33,11 @@ class FlowRun:
             return cls(*row)
 
     @classmethod
-    def create(cls, name: str, start_flow_node_id: str, status="running") -> FlowRun:
+    def create(cls, name: str, start_flow_node_id: str, status="in-progress") -> FlowRun:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO flow_runs VALUES "
-                "(name = %s, status = %s, start_flow_node_id = %s, current_node_id = %s)"
+                "INSERT INTO flow_runs (name, status, start_flow_node_id, current_node_id) "
+                "VALUES (%s, %s, %s, %s) "
                 "RETURNING id, started_at",
                 (name, status, start_flow_node_id, start_flow_node_id),
             )

@@ -33,7 +33,7 @@ def flowmethod(func):
 
         reqMetadata: node_connector_pb2.RequestMetadata = request.metadata
         run = FlowRun.fetch_from_id(int(reqMetadata.flow_run_id))
-        if run.status != "running":
+        if run.status != "in-progress":
             msg = f"FlowRun {run.id} is not running"
             logger.error(msg)
             func(*args, **kwargs, error=msg)
@@ -72,7 +72,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
     def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
         logger.info("Received StartFlow request")
-        run = FlowRun.create(request.start_node_id)
+        run = FlowRun.create(name=request.start_node_id, start_flow_node_id=request.start_node_id)
         logger.info(f"Starting run: {run.id}")
         return node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
 

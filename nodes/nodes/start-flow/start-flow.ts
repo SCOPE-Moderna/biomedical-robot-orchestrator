@@ -34,7 +34,7 @@ module.exports = function (RED: NodeAPI) {
         this.status({
           fill: "red",
           shape: "dot",
-          text: "node must be at the beginning of the flow!",
+          text: "Node must be at the beginning of the flow!",
         });
         done(
           new Error(
@@ -53,6 +53,11 @@ module.exports = function (RED: NodeAPI) {
 
       service.StartFlow(startRequest, (error, response) => {
         if (error) {
+          this.status({
+            fill: "red",
+            shape: "dot",
+            text: `Node with ID: ${startRequest.start_node_id} failed to start flow.`,
+          });
           console.log(error);
           done(error);
           return;
@@ -60,7 +65,7 @@ module.exports = function (RED: NodeAPI) {
         this.status({
           fill: "green",
           shape: "dot",
-          text: `run id: ${response.run_id}`,
+          text: `Run ID: ${response.run_id} started.`,
         });
         // @ts-ignore
         this.send({
