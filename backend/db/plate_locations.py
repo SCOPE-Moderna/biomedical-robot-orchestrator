@@ -34,6 +34,26 @@ class PlateLocation:
             )
             rows = cur.fetchall()
             return [cls(*row) for row in rows]
+        
+    @classmethod
+    def initialize(cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1) -> PlateLocation:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO flow_runs (instrument_id, x_capacity, y_capacity) "
+                "VALUES (%d, %d, %d) "
+                "RETURNING id",
+                (int(instrument_id), x_capacity, y_capacity),
+            )
+            [id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
+            return cls(
+                id,
+                type,
+                in_use_by,
+                instrument_id,
+                parent_id,
+                x_capacity,
+                y_capacity,
+            )
 
     def set_in_use_by(self, node_run_id: int | None, node_run: NodeRun | None):
         if node_run is not None:
