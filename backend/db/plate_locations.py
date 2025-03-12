@@ -40,9 +40,9 @@ class PlateLocation:
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO plate_locations (instrument_id, x_capacity, y_capacity) "
-                "VALUES (%d, %d, %d) "
+                "VALUES (%s, %s, %s) "
                 "RETURNING id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity",
-                (int(instrument_id), x_capacity, y_capacity),
+                (instrument_id, x_capacity, y_capacity),
             )
             [plate_loc_id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
             return cls(
