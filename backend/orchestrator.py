@@ -39,7 +39,7 @@ class Orchestrator:
 
     async def run_node(self, noderun_id: str, function_name: str, function_args: dict, movement=False): #function_name and function_args used for demo
 
-        logger.info(f"Running node {noderun_id} in orchestrator")
+        logger.info(f"Running node {noderun_id} in orchestrator") 
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.fetch_from_id(noderun_id)
