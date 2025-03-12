@@ -77,7 +77,9 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info("Received StartFlow request")
         run = FlowRun.create(name=request.start_node_id, start_flow_node_id=request.start_node_id)
         logger.info(f"Starting run: {run.id}")
-        return node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
+        response = node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
+        logger.info("Received StartFlow response")
+        return response
 
     @flowmethod
     def XPeelStatus(self, request, context):
