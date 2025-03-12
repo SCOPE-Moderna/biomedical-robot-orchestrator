@@ -39,7 +39,7 @@ class PlateLocation:
     def create(cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1) -> PlateLocation:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO flow_runs (instrument_id, x_capacity, y_capacity) "
+                "INSERT INTO plate_locations (instrument_id, x_capacity, y_capacity) "
                 "VALUES (%d, %d, %d) "
                 "RETURNING id",
                 (int(instrument_id), x_capacity, y_capacity),
