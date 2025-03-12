@@ -36,7 +36,7 @@ class PlateLocation:
             return [cls(*row) for row in rows]
         
     @classmethod
-    def initialize(cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1) -> PlateLocation:
+    def create(cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1) -> PlateLocation:
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO flow_runs (instrument_id, x_capacity, y_capacity) "
@@ -44,9 +44,9 @@ class PlateLocation:
                 "RETURNING id",
                 (int(instrument_id), x_capacity, y_capacity),
             )
-            [id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
+            [plate_loc_id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
             return cls(
-                id,
+                plate_loc_id,
                 type,
                 in_use_by,
                 instrument_id,

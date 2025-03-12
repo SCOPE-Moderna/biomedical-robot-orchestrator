@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .node_runs import NodeRun
 from .conn import conn
+import datetime as dt
 
 
 class Instrument:
@@ -29,6 +30,25 @@ class Instrument:
             cur.execute("SELECT * FROM node_runs WHERE id = %s", (id,))
             row = cur.fetchone()
             return cls(*row)
+    
+    @classmethod
+    def create(cls, name: str = "xpeel_1", type: str = "xpeel", connection_method: str = "serial") -> Instrument:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO instruments (name, type, connection_method, created_at) "
+                "VALUES (%s, %s, %s, %s) "
+                "RETURNING id",
+                (name, type, connection_method, f'{int(dt.datetime.now().timestamp())}'),
+            )
+            [instrument_id, name, type, connection_method, in_use_by, updated_at] = cur.fetchone()
+            return cls(
+                instrument_id,
+                name,
+                type,
+                connection_method,
+                in_use_by,
+                updated_at,
+            )
         
     def set_in_use_by(self, node_run_id: int | None, node_run: NodeRun | None):
         if node_run is not None:
