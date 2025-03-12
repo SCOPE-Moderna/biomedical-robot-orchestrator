@@ -38,7 +38,7 @@ class Instrument:
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO instruments (name, type, connection_method, created_at, updated_at) "
-                "VALUES (%s, %s, %s, %s) "
+                "VALUES (%s, %s, %s, %s, %s) "
                 "RETURNING id, name, type, connection_method, connection_info, in_use_by, created_at, updated_at",
                 (name, type, connection_method, f'{dt.datetime.now()}', f'{dt.datetime.now()}'),
             )
