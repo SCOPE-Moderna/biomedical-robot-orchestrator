@@ -1,10 +1,13 @@
 import asyncio
+import logging
 from db.flow_runs import FlowRun
 from db.node_runs import NodeRun
 from db.instruments import Instrument
 from db.plate_locations import PlateLocation
 from flows.graph import FlowsGraph
 # from test_scripts.device_abc import UR_Robot, XPeelConnector
+
+logger = logging.getLogger(__name__)
 
 class Orchestrator:
 
@@ -15,6 +18,7 @@ class Orchestrator:
         self.sleep_time = 5 # Set async sleep time to 5 seconds
         self.xpeel_created = Instrument.create()
         self.loc_created = PlateLocation.create(self.xpeel_created.id)
+        logger.info(f"Orchestrator object created")
 
     async def check_queues(self):
         # NOTE: Infinite loop
@@ -34,6 +38,8 @@ class Orchestrator:
             await asyncio.sleep(self.sleep_time)
 
     async def run_node(self, noderun_id: str, function_name: str, function_args: dict, movement=False): #function_name and function_args used for demo
+
+        logger.info(f"Running node {noderun_id} in orchestrator")
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.fetch_from_id(noderun_id)
