@@ -145,4 +145,4 @@ if __name__ == "__main__":
         logger.info(f"Test query successful")
 
     serve()
-    #orchestrator.check_queues()
+    orchestrator.check_queues()
