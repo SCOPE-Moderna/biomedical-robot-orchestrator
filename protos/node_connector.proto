@@ -38,9 +38,9 @@ service NodeConnector {
   rpc StartFlow (StartFlowRequest) returns (StartFlowResponse) {}
 
   // XPeel
-  rpc XPeelStatus (Empty) returns (XPeelStatusResponse) {}
-  rpc XPeelReset (Empty) returns (XPeelStatusResponse) {}
+  rpc XPeelStatus (XPeelGeneralRequest) returns (XPeelStatusResponse) {}
+  rpc XPeelReset (XPeelGeneralRequest) returns (XPeelStatusResponse) {}
   rpc XPeelXPeel (XPeelXPeelRequest) returns (XPeelStatusResponse) {}
-  rpc XPeelSealCheck (Empty) returns (XPeelSealCheckResponse) {}
-  rpc XPeelTapeRemaining (Empty) returns (XPeelTapeRemainingResponse) {}
+  rpc XPeelSealCheck (XPeelGeneralRequest) returns (XPeelSealCheckResponse) {}
+  rpc XPeelTapeRemaining (XPeelGeneralRequest) returns (XPeelTapeRemainingResponse) {}
 }

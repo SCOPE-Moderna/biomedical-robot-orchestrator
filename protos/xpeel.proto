@@ -36,6 +36,10 @@ message XPeelXPeelRequest {
   RequestMetadata metadata = 100;
 }
 
+message XPeelGeneralRequest {
+  RequestMetadata metadata = 100;
+}
+
 message XPeelSealCheckResponse {
   bool seal_detected = 1;
   ResponseMetadata metadata = 100;
