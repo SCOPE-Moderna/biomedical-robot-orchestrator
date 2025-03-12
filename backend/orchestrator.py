@@ -4,23 +4,25 @@ from db.node_runs import NodeRun
 from db.instruments import Instrument
 from db.plate_locations import PlateLocation
 from flows.graph import FlowsGraph
-from test_scripts.device_abc import UR_Robot, XPeelConnector
+# from test_scripts.device_abc import UR_Robot, XPeelConnector
 
 class Orchestrator:
 
-    def __init__(self):
+    def __init__(self, xpeel):
         # FIXME: Make instruments initialize properly
-        self.xpeel = XPeelConnector(addr, port, instr_id) # TODO: set xpeel address and port
-        self.ur3 = UR_Robot(addr, port, instr_id) # TODO: set ur3 address and port
+        self.xpeel = xpeel # XPeelConnector(addr, port, instr_id) # TODO: set xpeel address and port
+        #self.ur3 = UR_Robot(addr, port, instr_id) # TODO: set ur3 address and port
         self.sleep_time = 5 # Set async sleep time to 5 seconds
+        self.xpeel_created = Instrument.create()
+        self.loc_created = PlateLocation.create(self.xpeel_created.instrument_id)
 
     async def check_queues(self):
         # NOTE: Infinite loop
         while True:
             # For each instrument
-            for instr in (self.xpeel, self.ur3):
+            for instr in (self.xpeel): #, self.ur3):
 
-                db_instr = Instrument.fetch_from_id(instr.instr_id)
+                db_instr = Instrument.fetch_from_id(self.xpeel_created.instrument_id) #instr.instr_id)
 
                 # Get the first item from the queue if the instrument is not in use
                 if db_instr.in_use_by is None or db_instr.in_use_by.status == 'completed':
@@ -31,17 +33,17 @@ class Orchestrator:
             # Wait before trying to get things from the queue again
             await asyncio.sleep(self.sleep_time)
 
-    async def run_node(self, noderun_id: str, movement=False):
+    async def run_node(self, noderun_id: str, function_name: str, function_args: dict, movement=False): #function_name and function_args used for demo
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.fetch_from_id(noderun_id)
 
         # Get additional information about this type of node
-        node_info = FlowsGraph.get_node(noderun.node_id)
+        # node_info = FlowsGraph.get_node(noderun.node_id)
 
         # Get the instrument associated with the node
         # TODO: hard code associations between node_ids and instruments
-        instrument = getattr(self, (node_info['instrument']))
+        instrument = self.xpeel #getattr(self, (node_info['instrument']))
 
         # Add node_run_id to instrument queue
         instrument.q.put(noderun_id)
@@ -55,8 +57,8 @@ class Orchestrator:
             await asyncio.sleep(self.sleep_time)
 
         # Get plate locations associated with this node
-        platelocation_source = PlateLocation.fetch_from_ids(node_info['source_plate_locations'])
-        platelocation_destination = PlateLocation.fetch_from_ids(node_info['destination_plate_locations'])
+        platelocation_source = PlateLocation.fetch_from_ids(self.loc_created.plate_loc_id) #node_info['source_plate_locations'])
+        platelocation_destination = PlateLocation.fetch_from_ids(self.loc_created.plate_loc_id) #node_info['destination_plate_locations'])
 
         # Check that source plate locations are filled
         while True:
@@ -117,7 +119,7 @@ class Orchestrator:
 
         # Run function on instrument
         # TODO: Make sure the input is structured correctly
-        function_result = instrument.call_node_interface(node_info['function'], node_info['input_data'])
+        function_result = getattr(instrument, function_name)(**function_args) #instrument.call_node_interface(node_info['function'], node_info['input_data'])
 
         # Complete Node Run
         noderun.complete(noderun_id)

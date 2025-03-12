@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import socket
-from queue import SimpleQueue
+from queue import SimpleQueue, Queue
 from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
 logger = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ class XPeel:
         self.addr = addr
         self.port = port
         self._connect()
+        self.q = Queue()
         self.recv_queue = SimpleQueue()
         logger.info(f"Connected on {addr}:{port}!")
 
