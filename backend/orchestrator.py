@@ -4,7 +4,7 @@ from db.node_runs import NodeRun
 from db.instruments import Instrument
 from db.plate_locations import PlateLocation
 from flows.graph import FlowsGraph
-from test_scripts.device_abc import UR_Robot, XPeelConnector
+# from test_scripts.device_abc import UR_Robot, XPeelConnector
 
 class Orchestrator:
 
