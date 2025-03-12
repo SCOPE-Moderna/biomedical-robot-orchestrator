@@ -88,10 +88,10 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelStatus response: {msg}")
         return msg.to_xpeel_status_response()
 
-    async def XPeelReset(self, request, context):
+    def XPeelReset(self, request, context):
         logger.info("Received XPeelReset request")
         function_args = {}  # Add any necessary arguments here
-        result = await self.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
+        result = self.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
         logger.info(f"XPeelReset response: {result}")
         return result.to_xpeel_status_response()
 
