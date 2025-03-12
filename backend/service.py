@@ -20,7 +20,7 @@ xpeel = XPeel("192.168.0.201", 1628)
 
 
 def flowmethod(func):
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         # self = args[0]
         request: node_connector_pb2.GenericMessageWithRequestMetadata = args[1]
         # context = args[2]
@@ -29,7 +29,7 @@ def flowmethod(func):
         # args: self, request, context. we will require that requests have flow_id.
         if not request.HasField("metadata"):
             logger.error("Request does not have metadata", request)
-            func(*args, **kwargs, error="Request does not have metadata")
+            await func(*args, **kwargs, error="Request does not have metadata")
             return
 
         reqMetadata: node_connector_pb2.RequestMetadata = request.metadata
@@ -37,7 +37,7 @@ def flowmethod(func):
         if run.status != "in-progress":
             msg = f"FlowRun {run.id} is not running"
             logger.error(msg)
-            func(*args, **kwargs, error=msg)
+            await func(*args, **kwargs, error=msg)
             return
 
         # Check placement of current node in flow graph
@@ -54,7 +54,7 @@ def flowmethod(func):
             # end of flow
             pass
 
-        result: node_connector_pb2.GenericMessageWithResponseMetadata = func(
+        result: node_connector_pb2.GenericMessageWithResponseMetadata = await func(
             *args, **kwargs
         )
         logger.info(f"{func.__name__} returned: {result}")
@@ -88,10 +88,10 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelStatus response: {msg}")
         return msg.to_xpeel_status_response()
 
-    def XPeelReset(self, request, context):
+    async def XPeelReset(self, request, context):
         logger.info("Received XPeelReset request")
         function_args = {}  # Add any necessary arguments here
-        result = NodeConnectorServicer.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
+        result = await NodeConnectorServicer.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
         logger.info(f"XPeelReset response: {result}")
         return result.to_xpeel_status_response()
 
@@ -118,25 +118,26 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         )
 
 
-def serve():
+async def serve():
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     orchestrator = Orchestrator(xpeel)
     NodeConnectorServicer.orchestrator = orchestrator
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
         NodeConnectorServicer(), server
     )
     server.add_insecure_port(f"[::]:{port}")
-    server.start()
+    await server.start()
     logger.info("gRPC server started")
 
-    server.wait_for_termination()
+    await server.wait_for_termination()
     logger.info("gRPC server stopped")
 
 
 if __name__ == "__main__":
+    import asyncio
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     graph = FlowsGraph("/home/aquarium/.node-red")
 
@@ -148,5 +149,5 @@ if __name__ == "__main__":
         print(data)
         logger.info(f"Test query successful")
 
-    serve()
+    asyncio.run(serve())
     NodeConnectorServicer.orchestrator.check_queues()
