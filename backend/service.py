@@ -12,11 +12,14 @@ from xpeel import XPeel
 from db.flow_runs import FlowRun
 from db.conn import conn
 
+from orchestrator import Orchestrator
+
 logger = logging.getLogger(__name__)
 
 
 xpeel = XPeel("192.168.0.201", 1628)
 
+orchestrator = Orchestrator(xpeel)
 
 def flowmethod(func):
     def wrapper(*args, **kwargs):
@@ -83,11 +86,12 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelStatus response: {msg}")
         return msg.to_xpeel_status_response()
 
-    def XPeelReset(self, request, context):
+    async def XPeelReset(self, request, context):
         logger.info("Received XPeelReset request")
-        msg = xpeel.reset()
-        logger.info(f"XPeelReset response: {msg}")
-        return msg.to_xpeel_status_response()
+        function_args = {}  # Add any necessary arguments here
+        result = await self.orchestrator.run_node(request.metadata.executing_node_id, 'reset', function_args)
+        logger.info(f"XPeelReset response: {result}")
+        return result.to_xpeel_status_response()
 
     def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
@@ -141,3 +145,4 @@ if __name__ == "__main__":
         logger.info(f"Test query successful")
 
     serve()
+    orchestrator.check_queues()
