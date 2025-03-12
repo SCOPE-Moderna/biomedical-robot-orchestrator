@@ -38,7 +38,7 @@ class Instrument:
                 "INSERT INTO instruments (name, type, connection_method, created_at) "
                 "VALUES (%s, %s, %s, %s) "
                 "RETURNING id",
-                (name, type, connection_method, f'{int(dt.datetime.now().timestamp())}'),
+                (name, type, connection_method, f'{dt.datetime.now()}'),
             )
             [instrument_id, name, type, connection_method, in_use_by, updated_at] = cur.fetchone()
             return cls(
