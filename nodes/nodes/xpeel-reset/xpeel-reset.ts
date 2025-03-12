@@ -5,7 +5,10 @@ import {
 } from "../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
 
-interface TestNodeDef extends NodeDef {}
+// interface XPeelResetNodeDef extends NodeDef {}
+interface XPeelResetNode extends Node {
+  onButtonClick: () => void;
+}
 
 const service = new NodeConnectorClient(
   "0.0.0.0:50051",
@@ -14,12 +17,35 @@ const service = new NodeConnectorClient(
 );
 
 module.exports = function (RED: NodeAPI) {
-  function XPeelResetNodeConstructor(this: Node, config: TestNodeDef): void {
+  function XPeelResetNodeConstructor(this: XPeelResetNode, config: NodeDef): void {
     RED.nodes.createNode(this, config);
+    const node = this as XPeelResetNode;
 
     this.on("input", async function (msg: NodeMessage, send, done) {
-      const payload = (msg.payload as string | number).toString();
-      service.XPeelReset(new Empty(), (error, response) => {
+      // @ts-ignore
+      if (!msg.__orchestrator_run_id) {
+        this.status({
+          fill: "red",
+          shape: "dot",
+          text: "Node must be part of a flow!",
+        });
+        done(
+          new Error(
+            "This node is not designed to be used outside of a flow. It should be called after a Start Flow node.",
+          ),
+        );
+        return;
+      }
+
+      const resetRequest = new XPeelGeneralRequest({
+        metadata.executing_node_id: node.id,
+        // @ts-ignore
+        metadata.flow_run_id: msg.__orchestrator_run_id,
+      });
+
+      this.warn(resetRequest.toObject());
+
+      service.XPeelReset(resetRequest, (error, response) => {
         if (error) {
           console.log(error);
         }
