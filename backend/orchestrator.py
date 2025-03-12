@@ -14,7 +14,7 @@ class Orchestrator:
         #self.ur3 = UR_Robot(addr, port, instr_id) # TODO: set ur3 address and port
         self.sleep_time = 5 # Set async sleep time to 5 seconds
         self.xpeel_created = Instrument.create()
-        self.loc_created = PlateLocation.create(self.xpeel_created.instrument_id)
+        self.loc_created = PlateLocation.create(self.xpeel_created.id)
 
     async def check_queues(self):
         # NOTE: Infinite loop
@@ -22,7 +22,7 @@ class Orchestrator:
             # For each instrument
             for instr in (self.xpeel): #, self.ur3):
 
-                db_instr = Instrument.fetch_from_id(self.xpeel_created.instrument_id) #instr.instr_id)
+                db_instr = Instrument.fetch_from_id(self.xpeel_created.id) #instr.instr_id)
 
                 # Get the first item from the queue if the instrument is not in use
                 if db_instr.in_use_by is None or db_instr.in_use_by.status == 'completed':
