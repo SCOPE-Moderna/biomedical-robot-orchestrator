@@ -19,16 +19,15 @@ module.exports = function (RED: NodeAPI) {
   ): void {
     RED.nodes.createNode(this, config);
 
-    const request = new XPeelGeneralRequest({
-      metadata: new RequestMetadata({
-        executing_node_id: this.id,
-        // @ts-ignore let's see if this works
-        flow_run_id: msg.payload.__orchestrator_run_id,
-      }),
-    });
-
     this.on("input", async function (msg: NodeMessage, send, done) {
-      const payload = (msg.payload as string | number).toString();
+      const request = new XPeelGeneralRequest({
+        metadata: new RequestMetadata({
+          executing_node_id: this.id,
+          // @ts-ignore let's see if this works
+          flow_run_id: msg.payload.__orchestrator_run_id,
+        }),
+      });
+
       service.XPeelTapeRemaining(request, (error, response) => {
         if (error) {
           console.log(error);

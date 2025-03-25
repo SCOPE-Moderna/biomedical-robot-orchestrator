@@ -35,10 +35,7 @@ class Orchestrator:
                 user = db_instr.get_user()
 
                 # Get the first item from the queue if the instrument is not in use
-                if (
-                    user is None
-                    or user.status == "completed"
-                ):
+                if user is None or user.status == "completed":
                     if instr.q.qsize() > 0:
                         next_noderun_id = instr.q.get()
                         db_instr.set_in_use_by(next_noderun_id)
