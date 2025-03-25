@@ -18,8 +18,8 @@ class Orchestrator:
         self.xpeel = xpeel  # XPeelConnector(addr, port, instr_id) # TODO: set xpeel address and port
         # self.ur3 = UR_Robot(addr, port, instr_id) # TODO: set ur3 address and port
         self.sleep_time = 5  # Set async sleep time to 5 seconds
-        self.xpeel_created = Instrument.create()
-        self.loc_created = PlateLocation.create(self.xpeel_created.id)
+        self.xpeel_created = Instrument.fetch_from_id(1)
+        self.loc_created = PlateLocation.fetch_from_ids(["xpeel-tray"])[0]
         logger.info(f"Orchestrator object created")
 
     async def check_queues(self):
@@ -32,10 +32,12 @@ class Orchestrator:
                     self.xpeel_created.id
                 )  # instr.instr_id)
 
+                user = db_instr.get_user()
+
                 # Get the first item from the queue if the instrument is not in use
                 if (
-                    db_instr.in_use_by is None
-                    or db_instr.in_use_by.status == "completed"
+                    user is None
+                    or user.status == "completed"
                 ):
                     if instr.q.qsize() > 0:
                         next_noderun_id = instr.q.get()
@@ -65,19 +67,19 @@ class Orchestrator:
         instrument = self.xpeel  # getattr(self, (node_info['instrument']))
 
         # Add node_run_id to instrument queue
-        instrument.q.put(noderun_id)
+        instrument.q.put(noderun.id)
 
         # Set status of this node in the database to "waiting"
         noderun.set_status("waiting")
 
         # Wait for the node_run_id to be called from the queue
         db_instrument = Instrument.fetch_from_id(instrument)
-        while db_instrument.in_use_by != noderun_id:
+        while db_instrument.in_use_by != noderun.id:
             await asyncio.sleep(self.sleep_time)
 
         # Get plate locations associated with this node
         platelocation_source = PlateLocation.fetch_from_ids(
-            self.loc_created.plate_loc_id
+            self.loc_created[0]
         )  # node_info['source_plate_locations'])
         platelocation_destination = PlateLocation.fetch_from_ids(
             self.loc_created.plate_loc_id
@@ -92,37 +94,38 @@ class Orchestrator:
 
             # For each source plate location
             for loc in platelocation_source:
-
                 # If the plate location has never been used or if it was used but the operation is complete
                 # NOTE: allowing an empty plate location to be considered "filled" could cause strange behavior.
                 # This functionality is allowed in order to be flexible for starting flows and pausing/restarting.
-                if loc.in_use_by is None or loc.in_use_by.status == "completed":
+                user = loc.get_user()
+                if user is None or user.status == "completed":
                     continue
 
                 # If the plate location has was used by a node that failed
-                elif loc.in_use_by.status == "failed":
+                elif user.status == "failed":
                     raise ValueError(
                         f"Status failed in node {loc.in_use_by} detected at plate location {loc}"
                     )
 
                 # If the location is actively in use
-                elif loc.in_use_by.status in ("in_progress", "waiting", "paused"):
-                    in_progress_count += 1
+                elif user.status in ("in_progress", "waiting", "paused"):
+                    source_in_progress_count += 1
 
                 else:
                     raise ValueError(
-                        f"Unrecognized status {loc.in_use_by.status} in node {loc.in_use_by}"
+                        f"Unrecognized status {user.status} in node {loc.in_use_by}"
                     )
 
             # For each destination plate location
             for loc in platelocation_destination:
-                if loc.in_use_by is None:  # If destination location is empty
+                user = loc.get_user()
+                if user is None:  # If destination location is empty
                     continue
-                elif loc.in_use_by.status == "failed":
+                elif user.status == "failed":
                     raise ValueError(
                         f"Status failed in node {loc.in_use_by} detected at plate location {loc}"
                     )
-                elif loc.in_use_by.status in (
+                elif user.status in (
                     "completed",
                     "in_progress",
                     "waiting",
@@ -131,14 +134,15 @@ class Orchestrator:
                     destination_in_progress_count += 1
                 else:
                     raise ValueError(
-                        f"Unrecognized status {loc.in_use_by.status} in node {loc.in_use_by}"
+                        f"Unrecognized status {user.status} in node {loc.in_use_by}"
                     )
 
             # If any of the plate locations were being used, wait for them to no longer be in use
             if source_in_progress_count > 0:
                 while any(
+                    # TODO: fetch all the users (node_run_id) of the plate locations at once (in one query)
                     loc.in_use_by is not None
-                    and loc.in_use_by.status in ("in_progress", "waiting", "paused")
+                    and loc.get_user().status in ("in_progress", "waiting", "paused")
                     for loc in platelocation_source
                 ):
                     await asyncio.sleep(self.sleep_time)
@@ -155,9 +159,9 @@ class Orchestrator:
 
         # Set source and destination plates to in use by this node
         for loc in platelocation_source:
-            loc.set_in_use_by(noderun_id)
+            loc.set_in_use_by(noderun.id)
         for loc in platelocation_destination:
-            loc.set_in_use_by(noderun_id)
+            loc.set_in_use_by(noderun.id)
 
         # Run function on instrument
         # TODO: Make sure the input is structured correctly
@@ -166,7 +170,7 @@ class Orchestrator:
         )  # instrument.call_node_interface(node_info['function'], node_info['input_data'])
 
         # Complete Node Run
-        noderun.complete(noderun_id)
+        noderun.complete()
 
         if movement is True:
             for loc in platelocation_source:

@@ -61,7 +61,7 @@ class NodeRun:
                 (status, self.finished_at, self.id),
             )
 
-    def complete(self, output_data: dict | None) -> None:
+    def complete(self, output_data: dict | None = None) -> None:
         self.output_data = output_data
         self.set_status("completed")
 

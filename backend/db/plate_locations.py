@@ -26,9 +26,7 @@ class PlateLocation:
         self.y_capacity = y_capacity
 
     @classmethod
-    def fetch_from_ids(
-        cls, ids: list[str], join_node_runs_status
-    ) -> list[PlateLocation]:
+    def fetch_from_ids(cls, ids: list[str]) -> list[PlateLocation]:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT * FROM plate_locations WHERE id = ANY(%s)",
@@ -36,9 +34,11 @@ class PlateLocation:
             )
             rows = cur.fetchall()
             return [cls(*row) for row in rows]
-        
+
     @classmethod
-    def create(cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1) -> PlateLocation:
+    def create(
+        cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1
+    ) -> PlateLocation:
         with conn.cursor() as cur:
             new_id = str(uuid.uuid4())
             cur.execute(
@@ -47,7 +47,9 @@ class PlateLocation:
                 "RETURNING id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity",
                 (new_id, instrument_id, x_capacity, y_capacity),
             )
-            [id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = cur.fetchone()
+            [id, type, in_use_by, instrument_id, parent_id, x_capacity, y_capacity] = (
+                cur.fetchone()
+            )
             return cls(
                 id,
                 type,
@@ -80,6 +82,12 @@ class PlateLocation:
                 "UPDATE plate_locations SET in_use_by = %s WHERE id = ANY(%s)",
                 (node_run.id, [pl.id for pl in plate_locations]),
             )
+
+    def get_user(self) -> NodeRun | None:
+        if self.in_use_by is None:
+            return None
+
+        return NodeRun.fetch_from_id(self.in_use_by)
 
 
 class PlateLocationWithNodeRunStatus(PlateLocation):

@@ -63,3 +63,9 @@ class Instrument:
                 "UPDATE instruments SET in_use_by = %s WHERE id = %s",
                 (node_run_id, self.id),
             )
+
+    def get_user(self) -> NodeRun | None:
+        if self.in_use_by is None:
+            return None
+
+        return NodeRun.fetch_from_id(self.in_use_by)
