@@ -1,8 +1,5 @@
 import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
-import {
-  NodeConnectorClient,
-  Empty,
-} from "../../node_connector_pb2/node_connector";
+import { NodeConnectorClient } from "../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
 import { XPeelGeneralRequest } from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";

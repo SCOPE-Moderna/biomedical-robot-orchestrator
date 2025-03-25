@@ -1,9 +1,8 @@
 import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
-import {
-  NodeConnectorClient,
-  Empty,
-} from "../../node_connector_pb2/node_connector";
+import { NodeConnectorClient } from "../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
+import { XPeelGeneralRequest } from "../../node_connector_pb2/xpeel";
+import { RequestMetadata } from "../../node_connector_pb2/metadata";
 
 interface TestNodeDef extends NodeDef {}
 
@@ -20,9 +19,17 @@ module.exports = function (RED: NodeAPI) {
   ): void {
     RED.nodes.createNode(this, config);
 
+    const request = new XPeelGeneralRequest({
+      metadata: new RequestMetadata({
+        executing_node_id: this.id,
+        // @ts-ignore let's see if this works
+        flow_run_id: msg.payload.__orchestrator_run_id,
+      }),
+    });
+
     this.on("input", async function (msg: NodeMessage, send, done) {
       const payload = (msg.payload as string | number).toString();
-      service.XPeelTapeRemaining(new Empty(), (error, response) => {
+      service.XPeelTapeRemaining(request, (error, response) => {
         if (error) {
           console.log(error);
         }
