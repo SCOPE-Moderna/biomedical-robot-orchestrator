@@ -75,9 +75,13 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
     def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
         logger.info("Received StartFlow request")
-        run = FlowRun.create(name=request.start_node_id, start_flow_node_id=request.start_node_id)
+        run = FlowRun.create(
+            name=request.start_node_id, start_flow_node_id=request.start_node_id
+        )
         logger.info(f"Starting run: {run.id}")
-        response = node_connector_pb2.StartFlowResponse(success=True, run_id=str(run.id))
+        response = node_connector_pb2.StartFlowResponse(
+            success=True, run_id=str(run.id)
+        )
         logger.info("Received StartFlow response")
         return response
 
@@ -91,9 +95,11 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelReset(self, request, context):
         logger.info("Received XPeelReset request")
         function_args = {}  # Add any necessary arguments here
-        noderun_id = request.metadata.executing_node_id
+        noderun_id = request.metadata.flow_run_id
         logger.info(f"Fetched excecuting noderun ID: {noderun_id}")
-        result = await NodeConnectorServicer.orchestrator.run_node(noderun_id, 'reset', function_args)
+        result = await NodeConnectorServicer.orchestrator.run_node(
+            noderun_id, "reset", function_args
+        )
         logger.info(f"XPeelReset response: {result}")
         return result.to_xpeel_status_response()
 
@@ -140,6 +146,7 @@ async def serve():
 
 if __name__ == "__main__":
     import asyncio
+
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     graph = FlowsGraph("/home/aquarium/.node-red")
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 message RequestMetadata {
     string executing_node_id = 1;
-    string flow_run_id = 2;
+    int32 flow_run_id = 2;
 }
   // DO NOT USE vvv
 message GenericMessageWithRequestMetadata {

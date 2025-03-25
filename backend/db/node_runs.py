@@ -8,7 +8,7 @@ from .conn import conn
 class NodeRun:
     def __init__(
         self,
-        id: int,
+        _id: int,
         flow_run_id: int,
         node_id: str,
         input_data: dict,
@@ -17,7 +17,7 @@ class NodeRun:
         finished_at: datetime.datetime,
         status: str,
     ):
-        self.id = id
+        self.id = _id
         self.flow_run_id = flow_run_id
         self.node_id = node_id
         self.input_data = input_data
@@ -34,7 +34,10 @@ class NodeRun:
             return cls(*row)
 
     @classmethod
-    def create(cls, flow_run_id: str, node_id: str, input_data: dict) -> NodeRun:
+    def create(cls, flow_run_id: int, node_id: str, input_data=None) -> NodeRun:
+        if input_data is None:
+            input_data = {}
+
         with conn.cursor() as cur:
             cur.execute(
                 """
