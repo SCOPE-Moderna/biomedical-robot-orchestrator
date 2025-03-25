@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 
 from .conn import conn
 
@@ -45,7 +46,7 @@ class NodeRun:
                 VALUES (%s, %s, %s)
                 RETURNING *
                 """,
-                (flow_run_id, node_id, input_data),
+                (flow_run_id, node_id, json.dumps(input_data)),
             )
             row = cur.fetchone()
             return cls(*row)
