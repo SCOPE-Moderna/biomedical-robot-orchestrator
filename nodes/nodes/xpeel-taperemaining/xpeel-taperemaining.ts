@@ -24,7 +24,7 @@ module.exports = function (RED: NodeAPI) {
         metadata: new RequestMetadata({
           executing_node_id: this.id,
           // @ts-ignore let's see if this works
-          flow_run_id: msg.payload.__orchestrator_run_id,
+          flow_run_id: msg.__orchestrator_run_id,
         }),
       });
 
