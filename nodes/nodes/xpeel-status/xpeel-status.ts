@@ -4,6 +4,8 @@ import {
   Empty,
 } from "../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
+import { XPeelGeneralRequest } from "../../node_connector_pb2/xpeel";
+import { RequestMetadata } from "../../node_connector_pb2/metadata";
 
 interface TestNodeDef extends NodeDef {}
 
@@ -29,7 +31,16 @@ module.exports = function (RED: NodeAPI) {
       // set xpeel queue to "in-use" & Node-RED status to "connected"
       // this.status({ fill: "green", shape: "ring", text: "running." });
       const payload = (msg.payload as string | number).toString();
-      service.XPeelStatus(new Empty(), (error, response) => {
+
+      const request = new XPeelGeneralRequest({
+        metadata: new RequestMetadata({
+          executing_node_id: this.id,
+          // @ts-ignore let's see if this works
+          flow_run_id: msg.payload.__orchestrator_run_id,
+        }),
+      });
+
+      service.XPeelStatus(request, (error, response) => {
         if (error) {
           console.log(error);
           this.status({ fill: "red", shape: "ring", text: "error occurred." });

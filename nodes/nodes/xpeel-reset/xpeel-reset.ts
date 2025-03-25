@@ -4,6 +4,8 @@ import {
   Empty,
 } from "../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
+import { XPeelGeneralRequest } from "../../node_connector_pb2/xpeel";
+import { RequestMetadata } from "../../node_connector_pb2/metadata";
 
 // interface XPeelResetNodeDef extends NodeDef {}
 interface XPeelResetNode extends Node {
@@ -17,7 +19,10 @@ const service = new NodeConnectorClient(
 );
 
 module.exports = function (RED: NodeAPI) {
-  function XPeelResetNodeConstructor(this: XPeelResetNode, config: NodeDef): void {
+  function XPeelResetNodeConstructor(
+    this: XPeelResetNode,
+    config: NodeDef,
+  ): void {
     RED.nodes.createNode(this, config);
     const node = this as XPeelResetNode;
 
@@ -38,9 +43,11 @@ module.exports = function (RED: NodeAPI) {
       }
 
       const resetRequest = new XPeelGeneralRequest({
-        metadata.executing_node_id: node.id,
-        // @ts-ignore
-        metadata.flow_run_id: msg.__orchestrator_run_id,
+        metadata: new RequestMetadata({
+          executing_node_id: node.id,
+          // @ts-ignore let's see if this works
+          flow_run_id: msg.payload.__orchestrator_run_id,
+        }),
       });
 
       this.warn(resetRequest.toObject());
@@ -51,6 +58,8 @@ module.exports = function (RED: NodeAPI) {
         }
         send([
           {
+            // @ts-ignore let's see if this works
+            __orchestrator_run_id: msg.payload.__orchestrator_run_id,
             payload: [
               response.error_code_1,
               response.error_code_2,
