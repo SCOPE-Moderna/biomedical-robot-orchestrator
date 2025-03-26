@@ -35,6 +35,7 @@ class Orchestrator:
                 # Get the first item from the queue if the instrument is not in use
                 if user is None or user.status == "completed":
                     if instr.q.qsize() > 0:
+                        logger.info("Calling next item from queue...")
                         next_noderun_id = instr.q.get()
                         db_instr.set_in_use_by(next_noderun_id)
 
@@ -152,6 +153,7 @@ class Orchestrator:
                 break
 
         # Set Node Run status to "in-progress"
+        logger.info(f"Setting status of NodeRun {noderun.id} to in-progress")
         noderun.set_status("in-progress")
 
         # Set source and destination plates to in use by this node

@@ -60,7 +60,7 @@ class PlateLocation:
                 y_capacity,
             )
 
-    def set_in_use_by(self, node_run_id: int | None, node_run: NodeRun | None):
+    def set_in_use_by(self, node_run_id: int | None, node_run: NodeRun | None = None):
         if node_run is not None:
             node_run_id = node_run.id
 
