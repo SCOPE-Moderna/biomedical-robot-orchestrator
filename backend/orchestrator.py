@@ -79,8 +79,10 @@ class Orchestrator:
         platelocation_source = PlateLocation.fetch_from_ids(
             [self.loc_created.id]
         )  # node_info['source_plate_locations'])
-        platelocation_destination = PlateLocation.fetch_from_ids(
-            [self.loc_created.id]
+        platelocation_destination = []
+        # TODO: fix later
+        #platelocation_destination = PlateLocation.fetch_from_ids(
+        #    [self.loc_created.id]
         )  # node_info['destination_plate_locations'])
 
         # Check that source plate locations are filled
