@@ -102,7 +102,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelReset(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelReset request")
         function_args = {}
-        logger.info(f"Fetched excecuting noderun ID: {request.metadata.flow_run_id}")
+        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -115,7 +115,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
         function_args = {request.set_number, request.adhere_time}
-        logger.info(f"Fetched excecuting noderun ID: {request.metadata.flow_run_id}")
+        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
