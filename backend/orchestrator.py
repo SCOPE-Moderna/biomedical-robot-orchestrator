@@ -144,11 +144,13 @@ class Orchestrator:
                     for loc in platelocation_source
                 ):
                     await asyncio.sleep(self.sleep_time)
+                    logger.info("Waiting for source plate locations to clear up")
             elif destination_in_progress_count > 0:
                 while any(
                     loc.in_use_by is not None for loc in platelocation_destination
                 ):
                     await asyncio.sleep(self.sleep_time)
+                    logger.info("Waiting for destination plate locations to clear up")
             else:
                 break
 
