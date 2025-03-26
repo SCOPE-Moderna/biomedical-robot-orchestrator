@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import os
 import time
 import subprocess
+from typing import TYPE_CHECKING
 import grpc
 import queue
 import threading
-from device_abc import generalized_input
+
+if TYPE_CHECKING:
+    from device_abc import generalized_input
 
 # import ipc_template_pb2
 # import ipc_template_pb2_grpc
