@@ -21,10 +21,10 @@ class XPeelMessage:
         else:
             self.raw_payload = ""
             self.payload = []
-            
+
     def to_xpeel_status_response(self) -> XPeelStatusResponse | None:
         if self.type != "ready":
-            return None
+            return XPeelStatusResponse(error_code_1=-1, error_code_2=-1, error_code_3=-1)
         int_payload = [int(x) for x in self.payload]
         return XPeelStatusResponse(
             error_code_1=int_payload[0],
