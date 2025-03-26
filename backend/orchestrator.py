@@ -105,7 +105,7 @@ class Orchestrator:
                     )
 
                 # If the location is actively in use
-                elif user.status in ("in_progress", "waiting", "paused"):
+                elif user.status in ("in-progress", "waiting", "paused"):
                     source_in_progress_count += 1
 
                 else:
@@ -124,7 +124,7 @@ class Orchestrator:
                     )
                 elif user.status in (
                     "completed",
-                    "in_progress",
+                    "in-progress",
                     "waiting",
                     "paused",
                 ):
@@ -139,7 +139,7 @@ class Orchestrator:
                 while any(
                     # TODO: fetch all the users (node_run_id) of the plate locations at once (in one query)
                     loc.in_use_by is not None
-                    and loc.get_user().status in ("in_progress", "waiting", "paused")
+                    and loc.get_user().status in ("in-progress", "waiting", "paused")
                     for loc in platelocation_source
                 ):
                     await asyncio.sleep(self.sleep_time)
@@ -151,8 +151,8 @@ class Orchestrator:
             else:
                 break
 
-        # Set Node Run status to "in_progress"
-        noderun.set_status("in_progress")
+        # Set Node Run status to "in-progress"
+        noderun.set_status("in-progress")
 
         # Set source and destination plates to in use by this node
         for loc in platelocation_source:
