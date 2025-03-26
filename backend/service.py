@@ -101,7 +101,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
     async def XPeelReset(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelReset request")
-        function_args = {}  # Add any necessary arguments here
+        function_args = {}
         logger.info(f"Fetched excecuting noderun ID: {request.metadata.flow_run_id}")
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
@@ -112,11 +112,18 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelReset response: {result}")
         return result.to_xpeel_status_response()
 
-    def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
+    async def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
-        msg = xpeel.peel(request.set_number, request.adhere_time)
-        logger.info(f"XPeelXPeel response: {msg}")
-        return msg.to_xpeel_status_response()
+        function_args = {request.set_number, request.adhere_time}
+        logger.info(f"Fetched excecuting noderun ID: {request.metadata.flow_run_id}")
+        result = await NodeConnectorServicer.orchestrator.run_node(
+            request.metadata.flow_run_id,
+            request.metadata.executing_node_id,
+            "peel",
+            function_args,
+        )
+        logger.info(f"XPeelXPeel response: {result}")
+        return result.to_xpeel_status_response()
 
     def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")

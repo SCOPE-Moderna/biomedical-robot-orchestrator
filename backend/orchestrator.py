@@ -170,6 +170,7 @@ class Orchestrator:
 
         # Complete Node Run
         noderun.complete()
+        logger.info(f"NodeRun {noderun.id} completed")
 
         if movement is True:
             for loc in platelocation_source:
