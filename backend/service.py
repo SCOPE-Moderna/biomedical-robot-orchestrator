@@ -19,7 +19,7 @@ from db.conn import conn
 
 from orchestrator import Orchestrator
 
-from .python_ipc_servicer import IpcConnectionServicer
+from python_ipc_servicer import IpcConnectionServicer
 
 logger = logging.getLogger(__name__)
 
