@@ -30,7 +30,7 @@ class Orchestrator:
                 )  # instr.instr_id)
 
                 user = db_instr.get_user()
-                logger.info(f"Instrument user: {user}")
+                logger.info(f"Instrument user: {user.id if user is not None else None}")
 
                 # Get the first item from the queue if the instrument is not in use
                 if user is None or user.status == "completed":
