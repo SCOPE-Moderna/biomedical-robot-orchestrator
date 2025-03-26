@@ -153,6 +153,7 @@ class Orchestrator:
                     logger.info("Waiting for destination plate locations to clear up")
             else:
                 break
+            # BUG: The plate locations are not fetched from the database again after waiting, so the status never changes
 
         # Set Node Run status to "in-progress"
         logger.info(f"Setting status of NodeRun {noderun.id} to in-progress")

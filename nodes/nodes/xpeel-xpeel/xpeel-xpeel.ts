@@ -5,6 +5,7 @@ import {
 } from "../../node_connector_pb2/node_connector";
 import * as grpc from "@grpc/grpc-js";
 import { XPeelXPeelRequest } from "../../node_connector_pb2/xpeel";
+import { RequestMetadata } from "../../node_connector_pb2/metadata";
 
 interface XPeelXPeelNodeDef extends NodeDef {
   set_number: number;
@@ -30,6 +31,11 @@ module.exports = function (RED: NodeAPI) {
         new XPeelXPeelRequest({
           set_number: config.set_number,
           adhere_time: config.adhere_time,
+          metadata: new RequestMetadata({
+            executing_node_id: this.id,
+            // @ts-ignore let's see if this works
+            flow_run_id: msg.__orchestrator_run_id,
+          })
         }),
         (error, response) => {
           if (error) {
