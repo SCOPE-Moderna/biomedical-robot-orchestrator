@@ -76,7 +76,7 @@ class Orchestrator:
 
         # Get plate locations associated with this node
         platelocation_source = PlateLocation.fetch_from_ids(
-            self.loc_created[0]
+            self.loc_created.plate_loc_id
         )  # node_info['source_plate_locations'])
         platelocation_destination = PlateLocation.fetch_from_ids(
             self.loc_created.plate_loc_id
