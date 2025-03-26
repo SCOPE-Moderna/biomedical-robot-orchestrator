@@ -84,12 +84,14 @@ class XPeel:
         logger.debug(f"recv: from device, returning {msg}, {self.recv_queue.qsize()} in queue")
         return msg
 
-    def wait_for_type(self, cmd_type: str) -> XPeelMessage:
+    def wait_for_type(self, cmd_type: str | list[str]) -> XPeelMessage:
+        if type(cmd_type) == str:
+            cmd_type = [cmd_type]
         logger.debug(f"waiting for type {cmd_type}")
         while True:
             msg = XPeelMessage(self.recv())
             logger.debug(f"waiting for type {cmd_type}, got {msg.type}")
-            if msg.type == cmd_type:
+            if msg.type in cmd_type:
                 return msg
 
     def status(self) -> XPeelMessage:
@@ -98,7 +100,7 @@ class XPeel:
 
     def reset(self) -> XPeelMessage:
         self.send("*reset")
-        return self.wait_for_type("homing")
+        return self.wait_for_type(["homing", "ready"])
 
     def seal_check(self) -> XPeelMessage:
         self.send("*sealcheck")
