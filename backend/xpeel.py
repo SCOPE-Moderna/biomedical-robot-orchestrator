@@ -18,7 +18,10 @@ class XPeelMessage:
         if len(split_msg) == 2:
             self.raw_payload = split_msg[1]
             self.payload: list[str] = self.raw_payload.split(",")
-
+        else:
+            self.raw_payload = ""
+            self.payload = []
+            
     def to_xpeel_status_response(self) -> XPeelStatusResponse | None:
         if self.type != "ready":
             return None
