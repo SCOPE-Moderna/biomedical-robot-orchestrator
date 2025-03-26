@@ -64,7 +64,7 @@ class NodeRun:
 
     def complete(self, output_data: dict | None = None) -> None:
         self.output_data = output_data
-        self.set_status("completed")
+        self.status = "completed"
 
         with conn.cursor() as cur:
             cur.execute(
