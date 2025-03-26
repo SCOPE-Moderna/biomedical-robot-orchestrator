@@ -139,7 +139,7 @@ async def serve():
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     orchestrator = Orchestrator(xpeel)
 
     ncs = NodeConnectorServicer()
