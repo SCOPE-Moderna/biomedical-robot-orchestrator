@@ -6,13 +6,15 @@ from concurrent import futures
 
 import grpc
 
-from flows.graph import FlowsGraph
-from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc
+from flows.graph import FlowsGraph, Node
+from node_connector_pb2 import xpeel_pb2, node_connector_pb2, node_connector_pb2_grpc,ipc_template_pb2_grpc
 from xpeel import XPeel
 from db.flow_runs import FlowRun
 from db.conn import conn
 
 from orchestrator import Orchestrator
+
+from backend.python_ipc_servicer import IpcConnectionServicer
 
 logger = logging.getLogger(__name__)
 
@@ -132,12 +134,9 @@ async def serve():
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")
-    server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    orchestrator = Orchestrator(xpeel)
-    NodeConnectorServicer.orchestrator = orchestrator
-    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
-        NodeConnectorServicer(), server
-    )
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(NodeConnectorServicer(), server)
+    ipc_template_pb2_grpc.add_IpcCommunicationServiceServicer_to_server(IpcConnectionServicer(),server)
     server.add_insecure_port(f"[::]:{port}")
     await server.start()
     logger.info("gRPC server started")

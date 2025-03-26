@@ -10,7 +10,9 @@ import rtde_io
 
 #xpeel
 import socket
-from queue import SimpleQueue, Queue
+from queue import SimpleQueue
+from python_ipc_servicer import send_message_to_client
+
 
 class generalized_input:
     x_position = 0
@@ -22,11 +24,9 @@ class generalized_input:
 
 class abstractConnector(ABC):
 
-    def __init__(self, ip_addr, port, instr_id):
+    def __init__(self,ip_addr,port):
         self.ip_addr = ip_addr
         self.port = port
-        self.q = Queue()
-        self.instr_id = instr_id
         self.connect_device()
 
     @abstractmethod
@@ -49,7 +49,18 @@ class abstractConnector(ABC):
         else:
             return None
 
-class UR_Robot(abstractConnector):
+class abstractIPC(abstractConnector):
+    #OVERWRITE THIS
+    client_pid = None
+    def call_node_interface(self, node_name, relevant_data:generalized_input):
+
+        if self.client_pid:
+            send_message_to_client(self.client_pid,relevant_data) 
+        else:
+            raise Exception("Invalid client process ID. Did the connection succeed?")
+
+
+class UrRobot(abstractConnector):
     
     waypoint_J1 = [0.0, -1.3, 0.0, -1.3, 0.0, 0.0]
     waypoint_J2 = [0.0016515760216861963, -1.5747383276568812, 0.002468585968017578, -1.5649493376361292, 0.007608110550791025, 0.0018253473099321127]
@@ -152,11 +163,6 @@ class XPeelConnector(abstractConnector):
 
     def disconnect(self,general_input):
         self.sock_conn.close()
-
-
-
-
-
 
 
 # device_ip = "192.168.0.205"
