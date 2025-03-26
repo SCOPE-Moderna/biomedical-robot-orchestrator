@@ -145,7 +145,7 @@ async def serve():
     ncs = NodeConnectorServicer()
     ncs.orchestrator = orchestrator
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
-        NodeConnectorServicer(), server
+        ncs, server
     )
 
     ipc_template_pb2_grpc.add_IpcCommunicationServiceServicer_to_server(
