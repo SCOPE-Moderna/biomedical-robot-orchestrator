@@ -26,7 +26,7 @@ class Orchestrator:
         # NOTE: Infinite loop
         while True:
             # For each instrument
-            for instr in self.xpeel:  # , self.ur3):
+            for instr in [self.xpeel]:  # , self.ur3):
 
                 db_instr = Instrument.fetch_from_id(
                     self.xpeel_created.id
@@ -73,6 +73,7 @@ class Orchestrator:
         db_instrument = Instrument.fetch_from_id(self.xpeel_created.id)
         while db_instrument.in_use_by != noderun.id:
             await asyncio.sleep(self.sleep_time)
+            db_instrument = Instrument.fetch_from_id(self.xpeel_created.id)
 
         # Get plate locations associated with this node
         platelocation_source = PlateLocation.fetch_from_ids(
