@@ -142,8 +142,8 @@ async def serve():
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     orchestrator = Orchestrator(xpeel)
 
+    NodeConnectorServicer.orchestrator = orchestrator
     ncs = NodeConnectorServicer()
-    ncs.orchestrator = orchestrator
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
         ncs, server
     )
