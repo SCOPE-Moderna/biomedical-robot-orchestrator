@@ -155,6 +155,8 @@ async def serve():
     await server.start()
     logger.info("gRPC server started")
 
+    asyncio.create_task(NodeConnectorServicer.orchestrator.check_queues())
+
     await server.wait_for_termination()
     logger.info("gRPC server stopped")
 
@@ -174,4 +176,3 @@ if __name__ == "__main__":
         logger.info(f"Test query successful")
 
     asyncio.run(serve())
-    NodeConnectorServicer.orchestrator.check_queues()
