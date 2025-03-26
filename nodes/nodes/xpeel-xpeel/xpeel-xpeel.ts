@@ -43,6 +43,8 @@ module.exports = function (RED: NodeAPI) {
           }
           send([
             {
+              // @ts-ignore
+              __orchestrator_run_id: msg.__orchestrator_run_id,
               payload: [
                 response.error_code_1,
                 response.error_code_2,
