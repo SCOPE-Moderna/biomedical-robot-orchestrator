@@ -99,8 +99,9 @@ class XPeel:
         return self.wait_for_type("ready")
 
     def reset(self) -> XPeelMessage:
+        self.wait_for_type(["ready"])
         self.send("*reset")
-        return self.wait_for_type(["homing", "ready"])
+        return self.wait_for_type(["ready"])
 
     def seal_check(self) -> XPeelMessage:
         self.send("*sealcheck")
