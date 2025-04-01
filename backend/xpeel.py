@@ -99,7 +99,7 @@ class XPeel:
         return self.wait_for_type("ready")
 
     def reset(self) -> XPeelMessage:
-        self.wait_for_type(["ready"])
+        self.status()
         self.send("*reset")
         return self.wait_for_type(["ready"])
 
