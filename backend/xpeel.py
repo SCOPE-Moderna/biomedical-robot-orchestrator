@@ -70,8 +70,11 @@ class XPeel:
         try:
             logger.debug("Attempting to receive data...")
             data = self.sock_conn.recv(1024).decode()
-        except (BrokenPipeError, TimeoutError):
+        except BrokenPipeError:
             self._connect()
+            return self.recv()
+        except TimeoutError:
+            logger.debug("Timeout error, trying again...")
             return self.recv()
 
         if len(data) == 0:
