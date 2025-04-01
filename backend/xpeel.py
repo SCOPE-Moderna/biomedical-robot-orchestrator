@@ -67,6 +67,7 @@ class XPeel:
             return msg
 
         try:
+            logger.debug("Attempting to receive data...")
             data = self.sock_conn.recv(1024).decode()
         except BrokenPipeError:
             self._connect()
@@ -102,7 +103,6 @@ class XPeel:
 
     def reset(self) -> XPeelMessage:
         self.send("*reset")
-        time.sleep(1)
         return self.wait_for_type(["ready"])
 
     def seal_check(self) -> XPeelMessage:
