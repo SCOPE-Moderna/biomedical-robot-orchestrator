@@ -5,7 +5,7 @@ import socket
 from queue import SimpleQueue, Queue
 from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
-import asyncio
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +100,9 @@ class XPeel:
         self.send("*stat")
         return self.wait_for_type("ready")
 
-    async def reset(self) -> XPeelMessage:
+    def reset(self) -> XPeelMessage:
         self.send("*reset")
-        await asyncio.sleep(1)
+        time.sleep(1)
         return self.wait_for_type(["ready"])
 
     def seal_check(self) -> XPeelMessage:
