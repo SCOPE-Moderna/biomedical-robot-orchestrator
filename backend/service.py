@@ -72,7 +72,7 @@ def flowmethod(func):
 
 
 class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
-    orchestrator = None
+    orchestrator = Orchestrator(xpeel)
 
     def Ping(self, request, context):
         logger.info(f"Received ping: {request.message}")
@@ -147,12 +147,9 @@ async def serve():
 
     logger.info(f"Starting gRPC server on port {port}")
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    orchestrator = Orchestrator(xpeel)
 
-    NodeConnectorServicer.orchestrator = orchestrator
-    ncs = NodeConnectorServicer()
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
-        ncs, server
+        NodeConnectorServicer(), server
     )
 
     ipc_template_pb2_grpc.add_IpcCommunicationServiceServicer_to_server(
