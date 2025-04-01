@@ -49,6 +49,7 @@ class XPeel:
 
     def _connect(self):
         self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock_conn.settimeout(5)
         self.sock_conn.connect((self.addr, self.port))
 
     def send(self, data: str):
