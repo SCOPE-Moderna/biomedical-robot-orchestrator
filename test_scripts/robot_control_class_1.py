@@ -1,7 +1,7 @@
 import rtde_receive
 import rtde_control
 import rtde_io
-from backend.device_abc import generalized_input
+from backend.device_abc import GeneralizedInput
 
 class UR3_test_controller_1:
     device_ip = "192.168.0.205"
@@ -35,7 +35,7 @@ class UR3_test_controller_1:
 
         return general_receive_function(self.control_interface)
 
-    def retrieve_state_linear(self,general_input:generalized_input):
+    def retrieve_state_linear(self,general_input:GeneralizedInput):
         return self.receive_interface.getActualTCPPose()
     
     def move_J_waypoint(self,general_input):
@@ -69,7 +69,7 @@ my_robot = UR3_test_controller_1()
 
 print(my_robot.call_node_interface("retrieve_state_joint",None))
 
-call_input = generalized_input()
+call_input = GeneralizedInput()
 call_input.waypoint_number =0
 call_input.string_input = "isSteady"
 

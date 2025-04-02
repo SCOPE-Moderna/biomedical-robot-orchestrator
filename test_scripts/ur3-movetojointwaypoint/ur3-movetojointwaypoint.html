@@ -1,0 +1,36 @@
+<script type="text/javascript">
+  RED.nodes.registerType("ur3-movetojointwaypoint", {
+    category: "ur3",
+    color: "#9cc2ff",
+    defaults: {
+      name: { value: "UR3: Move to Joint Waypoint" },
+      waypointId: { value: 0 },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "feed.svg",
+    label: function () {
+      return this.name || "UR3: Move to Joint Waypoint";
+    },
+    paletteLabel: "UR3: Move to Joint Waypoint",
+  });
+</script>
+
+<script type="text/html" data-template-name="ur3-movetojointwaypoint">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-waypointId"><i class="fa fa-tag"></i> Waypoint ID</label>
+    <input type="text" id="node-input-waypointId" placeholder="Waypoint ID" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="ur3-movetojointwaypoint">
+  <p>
+    Move UR3 to a specified joint waypoint.
+
+    Waypoint IDs are set in the Python backend.
+  </p>
+</script>

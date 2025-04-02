@@ -26,7 +26,9 @@ class XPeelMessage:
 
     def to_xpeel_status_response(self) -> XPeelStatusResponse | None:
         if self.type != "ready":
-            return XPeelStatusResponse(error_code_1=-1, error_code_2=-1, error_code_3=-1)
+            return XPeelStatusResponse(
+                error_code_1=-1, error_code_2=-1, error_code_3=-1
+            )
         int_payload = [int(x) for x in self.payload]
         return XPeelStatusResponse(
             error_code_1=int_payload[0],
@@ -61,21 +63,32 @@ class XPeel:
             self._connect()
             self.send(data)
 
-    def recv(self) -> str | None:
+    def recv(self, wait_for_data=True) -> str | None:
         if self.recv_queue.qsize() > 0:
             msg = self.recv_queue.get()
-            logger.debug(f"recv: ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue")
+            logger.debug(
+                f"recv: ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue"
+            )
             return msg
 
+        if not wait_for_data:
+            self.sock_conn.setblocking(False)
         try:
             logger.debug("Attempting to receive data...")
             data = self.sock_conn.recv(1024).decode()
+            logger.debug("RAW DATA: " + data)
         except BrokenPipeError:
             self._connect()
             return self.recv()
-        except socket.timeout:
-            logger.debug("Timeout error, trying again...")
-            return self.recv()
+        except BlockingIOError as bioe:
+            if not wait_for_data:
+                self.sock_conn.setblocking(True)
+                return
+            else:
+                raise bioe
+
+        if not wait_for_data:
+            self.sock_conn.setblocking(True)
 
         if len(data) == 0:
             return
@@ -88,7 +101,9 @@ class XPeel:
                 self.recv_queue.put(stripped)
 
         msg = self.recv_queue.get()
-        logger.debug(f"recv: from device, returning {msg}, {self.recv_queue.qsize()} in queue")
+        logger.debug(
+            f"recv: from device, returning {msg}, {self.recv_queue.qsize()} in queue"
+        )
         return msg
 
     def wait_for_type(self, cmd_type: str | list[str]) -> XPeelMessage:
@@ -101,13 +116,22 @@ class XPeel:
             if msg.type in cmd_type:
                 return msg
 
+    def flush_msgs(self) -> None:
+        # empty message queue
+        while not self.recv_queue.empty():
+            self.recv_queue.get(block=False)
+
+        # receive from xpeel
+        self.recv(wait_for_data=False)
+
     def status(self) -> XPeelMessage:
         self.send("*stat")
         return self.wait_for_type("ready")
 
     def reset(self) -> XPeelMessage:
+        self.flush_msgs()
         self.send("*reset")
-        return self.wait_for_type(["homing"])
+        return self.wait_for_type(["homing", "ready"])
 
     def seal_check(self) -> XPeelMessage:
         self.send("*sealcheck")

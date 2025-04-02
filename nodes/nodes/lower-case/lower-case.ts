@@ -1,19 +1,14 @@
-import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
+import type { NodeMessage } from "node-red";
+import { BaseNode } from "../nodeAPI";
 
-interface TestNodeDef extends NodeDef {}
-
-module.exports = function (RED: NodeAPI) {
-  function LowerCaseNodeConstructor(this: Node, config: TestNodeDef): void {
-    RED.nodes.createNode(this, config);
-
-    this.on("input", function (msg: NodeMessage, send, done) {
-      msg.payload = (msg.payload as string).toLowerCase() + "!!!";
-      send(msg);
-      // update status
-      this.status({ fill: "blue", shape: "ring", text: "msg sent." });
-      done();
-    });
+class LowercaseNode extends BaseNode {
+  onInput(msg: NodeMessage): NodeMessage {
+    msg.payload = (msg.payload as string).toLowerCase() + "!!!";
+    this.node.status({ fill: "blue", shape: "ring", text: "msg sent." });
+    return msg;
   }
+}
 
-  RED.nodes.registerType("lower-case", LowerCaseNodeConstructor);
-};
+module.exports = LowercaseNode.exportable("lower-case", {
+  checkForRunId: false,
+});

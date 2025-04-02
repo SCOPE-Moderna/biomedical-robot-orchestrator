@@ -1,81 +1,56 @@
-import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
+import { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
 import {
-  NodeConnectorClient,
   StartFlowRequest,
+  StartFlowResponse,
 } from "../../node_connector_pb2/node_connector";
-import * as grpc from "@grpc/grpc-js";
+import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
+import type { RequestMetadata } from "../../node_connector_pb2/metadata";
 
-// interface StartFlowNodeDef extends NodeDef {
-//   flow_name: string;
-// }
-
-interface StartFlowNode extends Node {
-  onButtonClick: () => void;
+interface IStartFlowNode extends Node {
   flow_name: string;
 }
 
-const service = new NodeConnectorClient(
-  "0.0.0.0:50051",
-  grpc.credentials.createInsecure(),
-  undefined,
-);
-
-module.exports = function (RED: NodeAPI) {
-  function StartFlowNodeConstructor(
-    this: StartFlowNode,
-    config: NodeDef,
-  ): void {
-    RED.nodes.createNode(this, config);
-    const node = this as StartFlowNode;
-
-    this.on("input", async function (msg: NodeMessage, send, done) {
-      // @ts-ignore
-      if (msg.__orchestrator_run_id) {
-        this.status({
-          fill: "red",
-          shape: "dot",
-          text: "Node must be at the beginning of the flow!",
-        });
-        done(
-          new Error(
-            "This node is not designed to be used in the middle of a flow. It should be the first node in a flow.",
-          ),
-        );
-        return;
-      }
-
-      const startRequest = new StartFlowRequest({
-        start_node_id: node.id,
-        flow_name: node.flow_name,
+class StartFlowNode extends BaseNode<IStartFlowNode> {
+  async onInput(msg: OrchestratorMessageInFlow): Promise<NodeMessage> {
+    if (msg.__orchestrator_run_id) {
+      this.node.status({
+        fill: "red",
+        shape: "dot",
+        text: "Node must be at the beginning of the flow!",
       });
 
-      this.warn(startRequest.toObject());
+      throw new Error(
+        "This node is not designed to be used in the middle of a flow. It should be the first node in a flow.",
+      );
+    }
 
-      service.StartFlow(startRequest, (error, response) => {
+    const startRequest = new StartFlowRequest({
+      start_node_id: this.node.id,
+      flow_name: this.node.flow_name,
+    });
+
+    const response: StartFlowResponse = await new Promise((resolve, reject) => {
+      this.grpcClient.StartFlow(startRequest, (error, response) => {
         if (error) {
-          this.status({
-            fill: "red",
-            shape: "dot",
-            text: `Node with ID: ${startRequest.start_node_id} failed to start flow.`,
-          });
-          console.log(error);
-          done(error);
-          return;
+          reject(error);
         }
-        this.status({
-          fill: "green",
-          shape: "dot",
-          text: `Run ID: ${response.run_id} started.`,
-        });
-        // @ts-ignore
-        this.send({
-          __orchestrator_run_id: response.run_id,
-          payload: response.toObject(),
-        });
-        done();
+        resolve(response);
       });
     });
-  }
 
-  RED.nodes.registerType("start-flow", StartFlowNodeConstructor);
-};
+    this.node.status({
+      fill: "green",
+      shape: "dot",
+      text: `Run ID: ${response.run_id} started.`,
+    });
+
+    msg.payload = response.toObject();
+    msg.__orchestrator_run_id = parseInt(response.run_id);
+
+    return msg;
+  }
+}
+
+module.exports = StartFlowNode.exportable("start-flow", {
+  checkForRunId: false,
+});

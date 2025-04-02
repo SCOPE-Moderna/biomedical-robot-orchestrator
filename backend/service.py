@@ -148,9 +148,8 @@ async def serve():
     logger.info(f"Starting gRPC server on port {port}")
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
 
-    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(
-        NodeConnectorServicer(), server
-    )
+    ncs = NodeConnectorServicer()
+    node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(ncs, server)
 
     ipc_template_pb2_grpc.add_IpcCommunicationServiceServicer_to_server(
         IpcConnectionServicer(), server

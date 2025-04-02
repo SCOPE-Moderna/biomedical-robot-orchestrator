@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "metadata.proto";
 import "xpeel.proto";
+import "ur3.proto";
 
 message PingRequest {
   string message = 1;
@@ -43,4 +44,7 @@ service NodeConnector {
   rpc XPeelXPeel (XPeelXPeelRequest) returns (XPeelStatusResponse) {}
   rpc XPeelSealCheck (XPeelGeneralRequest) returns (XPeelSealCheckResponse) {}
   rpc XPeelTapeRemaining (XPeelGeneralRequest) returns (XPeelTapeRemainingResponse) {}
+
+  // UR3
+  rpc UR3MoveToJointWaypoint (UR3MoveToJointWaypointRequest) returns (UR3MoveToJointWaypointResponse) {}
 }

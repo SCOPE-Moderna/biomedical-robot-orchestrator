@@ -9,7 +9,7 @@ import queue
 import threading
 
 if TYPE_CHECKING:
-    from device_abc import generalized_input
+    from device_abc import GeneralizedInput
 
 # import ipc_template_pb2
 # import ipc_template_pb2_grpc
@@ -78,7 +78,7 @@ class IpcConnectionServicer(ipc_template_pb2_grpc.IpcCommunicationServiceService
 
 ###
 
-def send_message_to_client(client_id, general_input:generalized_input):
+def send_message_to_client(client_id, general_input:GeneralizedInput):
     """
     Helper function to send a message to a specific client.
     """
@@ -91,7 +91,7 @@ def send_message_to_client(client_id, general_input:generalized_input):
     else:
         print(f"Client {client_id} is not connected.")
 
-def generalized_function_input_helper(general_input:generalized_input):
+def generalized_function_input_helper(general_input:GeneralizedInput):
     outgoing_message = ipc_template_pb2.GeneralizedFunctionInput()
 
     outgoing_message.x_position = general_input.x_position
