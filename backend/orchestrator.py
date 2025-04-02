@@ -76,14 +76,11 @@ class Orchestrator:
             db_instrument = Instrument.fetch_from_id(self.xpeel_created.id)
 
         # Get plate locations associated with this node
+        # NOTE: Nodes like XPeel functions that don't move the plates should only have source plate locations
         platelocation_source = PlateLocation.fetch_from_ids(
             [self.loc_created.id]
-        )  # node_info['source_plate_locations'])
+        ) 
         platelocation_destination = []
-        # TODO: fix later
-        #platelocation_destination = PlateLocation.fetch_from_ids(
-        #    [self.loc_created.id]
-        #)  # node_info['destination_plate_locations'])
 
         # Check that source plate locations are filled
         while True:
@@ -146,8 +143,9 @@ class Orchestrator:
                     for loc in platelocation_source
                 ):
                     await asyncio.sleep(self.sleep_time)
-                    logger.info("Waiting for source plate locations to clear up")
+                    logger.info("Waiting for source plate locations to be filled")
                     # re-fetch source plate locations
+                    # TODO: Populate fetch_from_ids with source associated with node type
                     platelocation_source = PlateLocation.fetch_from_ids([self.loc_created.id])
             elif destination_in_progress_count > 0:
                 while any(
@@ -156,6 +154,7 @@ class Orchestrator:
                     await asyncio.sleep(self.sleep_time)
                     logger.info("Waiting for destination plate locations to clear up")
                     # re-fetch destination plate locations
+                    #TODO: Populate fetch_from_ids with destination associated with node type
                     platelocation_destination = PlateLocation.fetch_from_ids([self.loc_created.id])
                     
             else:
