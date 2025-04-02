@@ -121,7 +121,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
     async def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
-        function_args = {request.set_number, request.adhere_time}
+        function_args = {"param": request.set_number, "adhere": request.adhere_time}
         logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
