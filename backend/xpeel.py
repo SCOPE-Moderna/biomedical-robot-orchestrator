@@ -107,7 +107,7 @@ class XPeel:
 
     def reset(self) -> XPeelMessage:
         self.send("*reset")
-        return self.wait_for_type(["ready"])
+        return self.wait_for_type(["homing"])
 
     def seal_check(self) -> XPeelMessage:
         self.send("*sealcheck")
