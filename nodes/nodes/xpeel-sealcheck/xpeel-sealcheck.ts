@@ -1,48 +1,37 @@
-import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
-import { NodeConnectorClient } from "../../node_connector_pb2/node_connector";
-import * as grpc from "@grpc/grpc-js";
-import { XPeelGeneralRequest } from "../../node_connector_pb2/xpeel";
+import type { NodeMessage } from "node-red";
+import {
+  XPeelGeneralRequest,
+  XPeelSealCheckResponse,
+} from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
+import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
 
-interface TestNodeDef extends NodeDef {}
-
-const service = new NodeConnectorClient(
-  "0.0.0.0:50051",
-  grpc.credentials.createInsecure(),
-  undefined,
-);
-
-module.exports = function (RED: NodeAPI) {
-  function XPeelSealCheckNodeConstructor(
-    this: Node,
-    config: TestNodeDef,
-  ): void {
-    RED.nodes.createNode(this, config);
-
-    this.on("input", async function (msg: NodeMessage, send, done) {
-      const request = new XPeelGeneralRequest({
-        metadata: new RequestMetadata({
-          executing_node_id: this.id,
-          // @ts-ignore let's see if this works
-          flow_run_id: msg.__orchestrator_run_id,
-        }),
-      });
-
-      service.XPeelSealCheck(request, (error, response) => {
-        if (error) {
-          console.log(error);
-        }
-        send([
-          {
-            payload: {
-              seal_detected: response.seal_detected,
-            },
-          },
-        ]);
-        done();
-      });
+class XPeelSealCheckNode extends BaseNode {
+  async onInput(
+    msg: OrchestratorMessageInFlow,
+    requestMetadata: RequestMetadata,
+  ): Promise<NodeMessage> {
+    const sealcheckRequest = new XPeelGeneralRequest({
+      metadata: requestMetadata,
     });
-  }
 
-  RED.nodes.registerType("xpeel-sealcheck", XPeelSealCheckNodeConstructor);
-};
+    const response: XPeelSealCheckResponse = await new Promise(
+      (resolve, reject) => {
+        this.grpcClient.XPeelSealCheck(sealcheckRequest, (error, response) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(response);
+        });
+      },
+    );
+
+    msg.payload = {
+      seal_detected: response.seal_detected,
+    };
+
+    return msg;
+  }
+}
+
+module.exports = XPeelSealCheckNode.exportable("xpeel-sealcheck");
