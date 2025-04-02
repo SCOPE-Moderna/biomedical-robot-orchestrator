@@ -93,11 +93,18 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         return response
 
     @flowmethod
-    def XPeelStatus(self, request, context):
+    async def XPeelStatus(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelStatus request")
-        msg = xpeel.status()
-        logger.info(f"XPeelStatus response: {msg}")
-        return msg.to_xpeel_status_response()
+        function_args = {}
+        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        result = await NodeConnectorServicer.orchestrator.run_node(
+            request.metadata.flow_run_id,
+            request.metadata.executing_node_id,
+            "status",
+            function_args,
+        )
+        logger.info(f"XPeelStatus response: {result}")
+        return result.to_xpeel_status_response()
 
     async def XPeelReset(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelReset request")
@@ -125,9 +132,16 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelXPeel response: {result}")
         return result.to_xpeel_status_response()
 
-    def XPeelSealCheck(self, request, context):
+    async def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")
-        msg = xpeel.seal_check()
+        function_args = {}
+        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        msg = await NodeConnectorServicer.orchestrator.run_node(
+            request.metadata.flow_run_id,
+            request.metadata.executing_node_id,
+            "seal_check",
+            function_args,
+        )
         has_seal = msg.type == "ready" and msg.payload[0] == "04"
         logger.info(f"XPeelSealCheck response: {has_seal}")
         return xpeel_pb2.XPeelSealCheckResponse(seal_detected=has_seal)
