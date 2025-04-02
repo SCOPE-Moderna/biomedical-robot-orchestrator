@@ -73,7 +73,7 @@ class XPeel:
         except BrokenPipeError:
             self._connect()
             return self.recv()
-        except TimeoutError:
+        except socket.timeout:
             logger.debug("Timeout error, trying again...")
             return self.recv()
 
