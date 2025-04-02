@@ -146,9 +146,16 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"XPeelSealCheck response: {has_seal}")
         return xpeel_pb2.XPeelSealCheckResponse(seal_detected=has_seal)
 
-    def XPeelTapeRemaining(self, request, context):
+    async def XPeelTapeRemaining(self, request, context):
         logger.info("Received XPeelTapeRemaining request")
-        msg = xpeel.tape_remaining()
+        function_args = {}
+        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        msg = await NodeConnectorServicer.orchestrator.run_node(
+            request.metadata.flow_run_id,
+            request.metadata.executing_node_id,
+            "tape_remaining",
+            function_args,
+        )
         logger.info(f"XPeelTapeRemaining response: {msg}")
         return xpeel_pb2.XPeelTapeRemainingResponse(
             deseals_remaining=int(msg.payload[0]) * 10,
