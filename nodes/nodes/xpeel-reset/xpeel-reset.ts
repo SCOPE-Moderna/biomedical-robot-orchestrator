@@ -1,23 +1,10 @@
-import nodeRed, { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
-import { NodeConnectorClient } from "../../node_connector_pb2/node_connector";
-import * as grpc from "@grpc/grpc-js";
+import { NodeMessage } from "node-red";
 import {
   XPeelGeneralRequest,
   XPeelStatusResponse,
 } from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
 import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
-
-// interface XPeelResetNodeDef extends NodeDef {}
-interface XPeelResetNode extends Node {
-  onButtonClick: () => void;
-}
-
-const service = new NodeConnectorClient(
-  "0.0.0.0:50051",
-  grpc.credentials.createInsecure(),
-  undefined,
-);
 
 class XPeelResetNode extends BaseNode {
   async onInput(
