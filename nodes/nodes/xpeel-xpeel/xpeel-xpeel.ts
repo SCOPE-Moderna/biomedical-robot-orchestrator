@@ -1,62 +1,39 @@
-import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
+import type { NodeMessage } from "node-red";
 import {
-  NodeConnectorClient,
-  Empty,
-} from "../../node_connector_pb2/node_connector";
-import * as grpc from "@grpc/grpc-js";
-import { XPeelXPeelRequest } from "../../node_connector_pb2/xpeel";
+  XPeelStatusResponse,
+  XPeelXPeelRequest,
+} from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
+import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
 
-interface XPeelXPeelNodeDef extends NodeDef {
-  set_number: number;
-  adhere_time: number;
+class XPeelXPeelNode extends BaseNode {
+  async onInput(
+    msg: OrchestratorMessageInFlow,
+    requestMetadata: RequestMetadata,
+  ): Promise<NodeMessage> {
+    const peelRequest = new XPeelXPeelRequest({
+      metadata: requestMetadata,
+    });
+
+    const response: XPeelStatusResponse = await new Promise(
+      (resolve, reject) => {
+        this.grpcClient.XPeelXPeel(peelRequest, (error, response) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(response);
+        });
+      },
+    );
+
+    msg.payload = [
+      response.error_code_1,
+      response.error_code_2,
+      response.error_code_3,
+    ];
+
+    return msg;
+  }
 }
 
-const service = new NodeConnectorClient(
-  "0.0.0.0:50051",
-  grpc.credentials.createInsecure(),
-  undefined,
-);
-
-module.exports = function (RED: NodeAPI) {
-  function XPeelXPeelNodeConstructor(
-    this: Node,
-    config: XPeelXPeelNodeDef,
-  ): void {
-    RED.nodes.createNode(this, config);
-
-    this.on("input", async function (msg: NodeMessage, send, done) {
-      const payload = (msg.payload as string | number).toString();
-      service.XPeelXPeel(
-        new XPeelXPeelRequest({
-          set_number: config.set_number,
-          adhere_time: config.adhere_time,
-          metadata: new RequestMetadata({
-            executing_node_id: this.id,
-            // @ts-ignore let's see if this works
-            flow_run_id: msg.__orchestrator_run_id,
-          }),
-        }),
-        (error, response) => {
-          if (error) {
-            console.log(error);
-          }
-          send([
-            {
-              // @ts-ignore
-              __orchestrator_run_id: msg.__orchestrator_run_id,
-              payload: [
-                response.error_code_1,
-                response.error_code_2,
-                response.error_code_3,
-              ],
-            },
-          ]);
-          done();
-        },
-      );
-    });
-  }
-
-  RED.nodes.registerType("xpeel-xpeel", XPeelXPeelNodeConstructor);
-};
+module.exports = XPeelXPeelNode.exportable("xpeel-xpeel");
