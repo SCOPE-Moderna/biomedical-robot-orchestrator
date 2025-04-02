@@ -39,8 +39,8 @@ export interface OrchestratorMessage extends NodeMessage {
 }
 
 export class BaseNode<
-  TNode extends Node = Node,
   TDef extends NodeDef = NodeDef,
+  TNode extends Node = Node,
 > {
   static type: string;
   static options: BaseNodeOptions;
@@ -49,12 +49,15 @@ export class BaseNode<
   grpcClient: NodeConnectorClient = service;
 
   node: TNode;
+  config: TDef;
 
   constructor(config: TDef) {
     // @ts-ignore: we must use the constructor to access the RED instance
     // because RED is attached to the subclass' prototype in exportable
+    // @ts-ignore
     this.constructor.RED.nodes.createNode(this as unknown as TNode, config);
     this.node = this as unknown as TNode;
+    this.config = config;
 
     this.node.on(
       "input",

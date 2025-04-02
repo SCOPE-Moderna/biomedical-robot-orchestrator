@@ -1,4 +1,4 @@
-import type { NodeMessage } from "node-red";
+import type { NodeMessage, Node, NodeDef } from "node-red";
 import {
   XPeelStatusResponse,
   XPeelXPeelRequest,
@@ -6,12 +6,26 @@ import {
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
 import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
 
-class XPeelXPeelNode extends BaseNode {
+interface XPeelNodeDef extends NodeDef {
+  set_number: string;
+  adhere_time: string;
+}
+
+class XPeelXPeelNode extends BaseNode<XPeelNodeDef> {
   async onInput(
     msg: OrchestratorMessageInFlow,
     requestMetadata: RequestMetadata,
   ): Promise<NodeMessage> {
+    const setNumber = parseInt(this.config.set_number);
+    const adhereTime = parseInt(this.config.adhere_time);
+
+    if (isNaN(setNumber) || isNaN(adhereTime)) {
+      throw new Error("setNumber or adhereTime must be numbers.");
+    }
+
     const peelRequest = new XPeelXPeelRequest({
+      set_number: setNumber,
+      adhere_time: adhereTime,
       metadata: requestMetadata,
     });
 

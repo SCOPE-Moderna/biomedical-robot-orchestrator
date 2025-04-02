@@ -5,8 +5,6 @@ import socket
 from queue import SimpleQueue, Queue
 from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
-import time
-
 logger = logging.getLogger(__name__)
 
 
@@ -125,6 +123,7 @@ class XPeel:
         self.recv(wait_for_data=False)
 
     def status(self) -> XPeelMessage:
+        self.flush_msgs()
         self.send("*stat")
         return self.wait_for_type("ready")
 
@@ -134,14 +133,17 @@ class XPeel:
         return self.wait_for_type(["homing", "ready"])
 
     def seal_check(self) -> XPeelMessage:
+        self.flush_msgs()
         self.send("*sealcheck")
         return self.wait_for_type("ready")
 
     def tape_remaining(self) -> XPeelMessage:
+        self.flush_msgs()
         self.send("*tapeleft")
         return self.wait_for_type("tape")
 
     def peel(self, param, adhere) -> XPeelMessage:
+        self.flush_msgs()
         self.send(f"*xpeel:{param}{adhere}")
         return self.wait_for_type("ready")
 
