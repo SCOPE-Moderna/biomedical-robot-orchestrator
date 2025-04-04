@@ -1,0 +1,44 @@
+<script type="text/javascript">
+  RED.nodes.registerType("ur3-movetojointwaypoint", {
+    category: "ur3",
+    color: "#b8e1e6",
+    defaults: {
+      waypoint_number: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "arrow-in.svg",
+    label: function () {
+      return `UR3: Move to waypoint ${this.waypoint_number}`;
+    },
+    paletteLabel: "UR3: Move to joint waypoint",
+  });
+</script>
+
+<script type="text/html" data-template-name="ur3-movetojointwaypoint">
+  <div class="form-row">
+    <h1>Waypoint Number</h1>
+    <label for="node-input-waypoint_number"
+      ><i class="fa fa-tag"></i>Waypoint Number</label
+    >
+    <p>
+      Waypoint associated with one joint state in the backend. Number must be
+      known to the backend.
+    </p>
+    <input type="number" id="node-input-waypoint_number" placeholder="1-9" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="ur3-movetojointwaypoint">
+  <h1>Move to Joint Waypoint</h1>
+  <p>Moves each individual to the angle specified in the backend.</p>
+  <h2>Waypoint Number</h2>
+  <p>
+    Index into the list of waypoints defined in the backend. Since arrays index
+    starting from 0, the 2nd element of the array, for example, would be 1.
+  </p>
+</script>

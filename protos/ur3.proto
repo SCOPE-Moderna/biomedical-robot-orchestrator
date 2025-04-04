@@ -3,7 +3,7 @@ syntax = "proto3";
 import "metadata.proto";
 
 message UR3MoveToJointWaypointRequest {
-    int32 waypoint_id = 1;
+    int32 waypoint_number = 1;
 
     RequestMetadata metadata = 100;
 }

@@ -50,10 +50,6 @@ class XPeel:
         self.recv_queue = AsyncQueue()
 
     async def connect(self):
-        # self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # self.sock_conn.settimeout(5)
-        # self.sock_conn.connect((self.addr, self.port))
-        # self.sock_conn.setblocking(False)
         self.reader, self.writer = await asyncio.open_connection(self.addr, self.port)
         logger.info(f"Connected to {self.addr}:{self.port}")
         self.loop = asyncio.get_event_loop()
