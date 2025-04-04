@@ -30,7 +30,9 @@ class Orchestrator:
                 )  # instr.instr_id)
 
                 user = db_instr.get_user()
-                logger.info(f"Instrument user: {user.id if user is not None else None}")
+                logger.info(
+                    f"Instrument user: {user.id if user is not None else None}, status: {user.status if user is not None else None}"
+                )
 
                 # Get the first item from the queue if the instrument is not in use
                 if user is None or user.status == "completed":
@@ -77,9 +79,7 @@ class Orchestrator:
 
         # Get plate locations associated with this node
         # NOTE: Nodes like XPeel functions that don't move the plates should only have source plate locations
-        platelocation_source = PlateLocation.fetch_from_ids(
-            [self.loc_created.id]
-        ) 
+        platelocation_source = PlateLocation.fetch_from_ids([self.loc_created.id])
         platelocation_destination = []
 
         # Check that source plate locations are filled
@@ -146,7 +146,9 @@ class Orchestrator:
                     logger.info("Waiting for source plate locations to be filled")
                     # re-fetch source plate locations
                     # TODO: Populate fetch_from_ids with source associated with node type
-                    platelocation_source = PlateLocation.fetch_from_ids([self.loc_created.id])
+                    platelocation_source = PlateLocation.fetch_from_ids(
+                        [self.loc_created.id]
+                    )
             elif destination_in_progress_count > 0:
                 while any(
                     loc.in_use_by is not None for loc in platelocation_destination
@@ -154,9 +156,11 @@ class Orchestrator:
                     await asyncio.sleep(self.sleep_time)
                     logger.info("Waiting for destination plate locations to clear up")
                     # re-fetch destination plate locations
-                    #TODO: Populate fetch_from_ids with destination associated with node type
-                    platelocation_destination = PlateLocation.fetch_from_ids([self.loc_created.id])
-                    
+                    # TODO: Populate fetch_from_ids with destination associated with node type
+                    platelocation_destination = PlateLocation.fetch_from_ids(
+                        [self.loc_created.id]
+                    )
+
             else:
                 break
 
@@ -172,7 +176,7 @@ class Orchestrator:
 
         # Run function on instrument
         # TODO: Make sure the input is structured correctly
-        function_result = getattr(instrument, function_name)(
+        function_result = await getattr(instrument, function_name)(
             **function_args
         )  # instrument.call_node_interface(node_info['function'], node_info['input_data'])
 

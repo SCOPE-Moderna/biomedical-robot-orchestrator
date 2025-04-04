@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import socket
 from queue import SimpleQueue, Queue
+import asyncio
+from asyncio import Queue as AsyncQueue
 from node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
 
 logger = logging.getLogger(__name__)
@@ -40,112 +42,106 @@ class XPeelMessage:
 
 class XPeel:
     def __init__(self, addr, port):
+        logger.info("XPEEL INIT")
+        print("XPEEL INIT FROM PRINT")
         self.addr = addr
         self.port = port
-        self._connect()
         self.q = Queue()
-        self.recv_queue = SimpleQueue()
-        logger.info(f"Connected on {addr}:{port}!")
+        self.recv_queue = AsyncQueue()
 
-    def _connect(self):
-        self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock_conn.settimeout(5)
-        self.sock_conn.connect((self.addr, self.port))
+    async def connect(self):
+        # self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.sock_conn.settimeout(5)
+        # self.sock_conn.connect((self.addr, self.port))
+        # self.sock_conn.setblocking(False)
+        self.reader, self.writer = await asyncio.open_connection(self.addr, self.port)
+        logger.info(f"Connected to {self.addr}:{self.port}")
+        self.loop = asyncio.get_event_loop()
+        self.reader_task = self.loop.create_task(self._async_recv_loop())
 
-    def send(self, data: str):
+    async def _async_recv_loop(self):
+        logger.info("Running async loop")
+        while True:
+            try:
+                # data = await self.loop.sock_recv(self.sock_conn, 1024)
+                data = await self.reader.read(1024)
+                if not data:
+                    logger.info("No data received.")
+                    continue
+
+                logger.debug("RAW DATA: " + data.decode())
+                msgs = data.decode().split("\r\n")
+                for msg in msgs:
+                    stripped = msg.strip()
+                    if stripped:
+                        await self.recv_queue.put(stripped)
+                        logger.debug(f"Message added to queue: {stripped}")
+            except (BrokenPipeError, ConnectionResetError):
+                logger.info("Connection lost, reconnecting...")
+                await self.connect()
+            except Exception as e:
+                logger.error(f"Error in async recv loop: {e}")
+                break
+
+    async def send(self, data: str):
         try:
             logger.debug(f"Sending data: {data}")
-            self.sock_conn.sendall((data + "\r\n").encode())
+            self.writer.write((data + "\r\n").encode())
+            await self.writer.drain()
         except BrokenPipeError:
             logger.info("Connection lost, reconnecting...")
-            self._connect()
-            self.send(data)
+            await self.connect()
+            await self.send(data)
 
-    def recv(self, wait_for_data=True) -> str | None:
-        if self.recv_queue.qsize() > 0:
-            msg = self.recv_queue.get()
-            logger.debug(
-                f"recv: ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue"
-            )
-            return msg
-
-        if not wait_for_data:
-            self.sock_conn.setblocking(False)
-        try:
-            logger.debug("Attempting to receive data...")
-            data = self.sock_conn.recv(1024).decode()
-            logger.debug("RAW DATA: " + data)
-        except BrokenPipeError:
-            self._connect()
-            return self.recv()
-        except BlockingIOError as bioe:
-            if not wait_for_data:
-                self.sock_conn.setblocking(True)
-                return
-            else:
-                raise bioe
-
-        if not wait_for_data:
-            self.sock_conn.setblocking(True)
-
-        if len(data) == 0:
-            return
-
-        # split data into list of strings
-        msgs = data.split("\r\n")
-        for msg in msgs:
-            stripped = msg.strip()
-            if len(stripped) > 0:
-                self.recv_queue.put(stripped)
-
-        msg = self.recv_queue.get()
+    async def recv(self) -> str | None:
+        """Retrieve a message from the asyncio queue."""
+        msg = await self.recv_queue.get()
         logger.debug(
-            f"recv: from device, returning {msg}, {self.recv_queue.qsize()} in queue"
+            f"recv: ({msg}) from queue, {self.recv_queue.qsize()} remaining in queue"
         )
         return msg
 
-    def wait_for_type(self, cmd_type: str | list[str]) -> XPeelMessage:
+    async def wait_for_type(self, cmd_type: str | list[str]) -> XPeelMessage:
         if type(cmd_type) == str:
             cmd_type = [cmd_type]
         logger.debug(f"waiting for type {cmd_type}")
         while True:
-            msg = XPeelMessage(self.recv())
+            msg = XPeelMessage(await self.recv())
             logger.debug(f"waiting for type {cmd_type}, got {msg.type}")
             if msg.type in cmd_type:
                 return msg
 
-    def flush_msgs(self) -> None:
+    async def flush_msgs(self) -> None:
         # empty message queue
         while not self.recv_queue.empty():
-            self.recv_queue.get(block=False)
+            await self.recv_queue.get()
 
-        # receive from xpeel
-        self.recv(wait_for_data=False)
+    async def status(self) -> XPeelMessage:
+        await self.flush_msgs()
+        await self.send("*stat")
+        return await self.wait_for_type("ready")
 
-    def status(self) -> XPeelMessage:
-        self.flush_msgs()
-        self.send("*stat")
-        return self.wait_for_type("ready")
+    async def reset(self) -> XPeelMessage:
+        await self.flush_msgs()
+        await self.send("*reset")
+        return await self.wait_for_type("ready")
 
-    def reset(self) -> XPeelMessage:
-        self.flush_msgs()
-        self.send("*reset")
-        return self.wait_for_type(["homing", "ready"])
+    async def seal_check(self) -> XPeelMessage:
+        await self.flush_msgs()
+        await self.send("*sealcheck")
+        return await self.wait_for_type("ready")
 
-    def seal_check(self) -> XPeelMessage:
-        self.flush_msgs()
-        self.send("*sealcheck")
-        return self.wait_for_type("ready")
+    async def tape_remaining(self) -> XPeelMessage:
+        await self.flush_msgs()
+        await self.send("*tapeleft")
+        return await self.wait_for_type("tape")
 
-    def tape_remaining(self) -> XPeelMessage:
-        self.flush_msgs()
-        self.send("*tapeleft")
-        return self.wait_for_type("tape")
-
-    def peel(self, param, adhere) -> XPeelMessage:
-        self.flush_msgs()
-        self.send(f"*xpeel:{param}{adhere}")
-        return self.wait_for_type("ready")
+    async def peel(self, param, adhere) -> XPeelMessage:
+        await self.flush_msgs()
+        await self.send(f"*xpeel:{param}{adhere}")
+        return await self.wait_for_type("ready")
 
     def disconnect(self):
-        self.sock_conn.close()
+        if self.writer:
+            self.writer.close()
+            asyncio.run(self.writer.wait_closed())

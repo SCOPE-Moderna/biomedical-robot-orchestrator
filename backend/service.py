@@ -5,6 +5,7 @@ import sys
 from concurrent import futures
 
 import grpc
+import asyncio
 
 from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import (
@@ -122,7 +123,9 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
         function_args = {"param": request.set_number, "adhere": request.adhere_time}
-        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        logger.info(
+            f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}, {function_args}"
+        )
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -130,7 +133,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             function_args,
         )
         logger.info(f"XPeelXPeel response: {result}")
-        return result.to_xpeel_status_response()
+        return await result.to_xpeel_status_response()
 
     async def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")
@@ -164,6 +167,9 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
 
 async def serve():
+
+    await xpeel.connect()
+
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")
@@ -186,7 +192,6 @@ async def serve():
 
 
 if __name__ == "__main__":
-    import asyncio
 
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     graph = FlowsGraph("/home/aquarium/.node-red")
