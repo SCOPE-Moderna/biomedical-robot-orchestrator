@@ -43,13 +43,12 @@ class XPeelMessage:
 class XPeel:
     def __init__(self, addr, port):
         logger.info("XPEEL INIT")
-        print("XPEEL INIT FROM PRINT")
         self.addr = addr
         self.port = port
         self.q = Queue()
         self.recv_queue = AsyncQueue()
 
-    async def connect(self):
+    async def connect_device(self):
         self.reader, self.writer = await asyncio.open_connection(self.addr, self.port)
         logger.info(f"Connected to {self.addr}:{self.port}")
         self.loop = asyncio.get_event_loop()
@@ -74,7 +73,7 @@ class XPeel:
                         logger.debug(f"Message added to queue: {stripped}")
             except (BrokenPipeError, ConnectionResetError):
                 logger.info("Connection lost, reconnecting...")
-                await self.connect()
+                await self.connect_device()
             except Exception as e:
                 logger.error(f"Error in async recv loop: {e}")
                 break
@@ -86,7 +85,7 @@ class XPeel:
             await self.writer.drain()
         except BrokenPipeError:
             logger.info("Connection lost, reconnecting...")
-            await self.connect()
+            await self.connect_device()
             await self.send(data)
 
     async def recv(self) -> str | None:

@@ -4,34 +4,50 @@ from db.node_runs import NodeRun
 from db.instruments import Instrument
 from db.plate_locations import PlateLocation
 
+# These imports are needed because the orchestrator creates these objects
+from xpeel import XPeel
+from device_abc import UrRobot
+
 
 logger = logging.getLogger(__name__)
 
 
 class Orchestrator:
 
-    def __init__(self, xpeel):
-        # FIXME: Make instruments initialize properly
-        self.xpeel = xpeel  # XPeelConnector(addr, port, instr_id) # TODO: set xpeel address and port
-        # self.ur3 = UR_Robot(addr, port, instr_id) # TODO: set ur3 address and port
+    def __init__(self):
+
         self.sleep_time = 5  # Set async sleep time to 5 seconds
-        self.xpeel_created = Instrument.fetch_from_id(1)
+
+        self.instrument_dict = {}
+        for db_instrument in Instrument.fetch_all():
+            if db_instrument.enabled is True:
+                class_obj = globals().get(db_instrument.type)
+
+                if class_obj is None:
+                    raise ValueError(f"Class '{db_instrument.type}' not found")
+
+                connection_info = db_instrument.connection_info
+                new_instance = class_obj(connection_info["ip"], connection_info["port"])
+                self.instrument_dict[db_instrument.id] = new_instance
+
         self.loc_created = PlateLocation.fetch_from_ids(["xpeel-tray"])[0]
         logger.info(f"Orchestrator object created")
+
+    async def connect_instruments(self):
+        # Connect to all instruments
+        for instr in self.instrument_dict.values():
+            await instr.connect_device()
 
     async def check_queues(self):
         # NOTE: Infinite loop
         while True:
             # For each instrument
-            for instr in [self.xpeel]:  # , self.ur3):
+            for instr_id, instr in self.instrument_dict.items():
 
-                db_instr = Instrument.fetch_from_id(
-                    self.xpeel_created.id
-                )  # instr.instr_id)
-
+                db_instr = Instrument.fetch_from_id(instr_id)
                 user = db_instr.get_user()
                 logger.info(
-                    f"Instrument user: {user.id if user is not None else None}, status: {user.status if user is not None else None}"
+                    f"Instrument {instr_id} user: {user.id if user is not None else None}, status: {user.status if user is not None else None}"
                 )
 
                 # Get the first item from the queue if the instrument is not in use
@@ -48,6 +64,7 @@ class Orchestrator:
         self,
         flow_run_id: int,
         executing_node_id: str,
+        instrument_id: int,
         function_name: str,
         function_args: dict,
         movement=False,
@@ -57,12 +74,10 @@ class Orchestrator:
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.create(flow_run_id, executing_node_id)
 
-        # Get additional information about this type of node
-        # node_info = FlowsGraph.get_node(noderun.node_id)
-
         # Get the instrument associated with the node
-        # TODO: hard code associations between node_ids and instruments
-        instrument = self.xpeel  # getattr(self, (node_info['instrument']))
+        instrument = self.instrument_dict.get(instrument_id)
+        if instrument is None:
+            raise ValueError(f"Invalid instrument: {instrument}")
 
         # Add node_run_id to instrument queue
         instrument.q.put(noderun.id)
@@ -71,11 +86,11 @@ class Orchestrator:
         noderun.set_status("waiting")
 
         # Wait for the node_run_id to be called from the queue
-        db_instrument = Instrument.fetch_from_id(self.xpeel_created.id)
+        db_instrument = Instrument.fetch_from_id(instrument_id)
         while db_instrument.in_use_by != noderun.id:
             logger.info(f"Waiting for node {executing_node_id} to run in {flow_run_id}")
             await asyncio.sleep(self.sleep_time)
-            db_instrument = Instrument.fetch_from_id(self.xpeel_created.id)
+            db_instrument = Instrument.fetch_from_id(instrument_id)
 
         # Get plate locations associated with this node
         # NOTE: Nodes like XPeel functions that don't move the plates should only have source plate locations
@@ -139,7 +154,7 @@ class Orchestrator:
                 while any(
                     # TODO: fetch all the users (node_run_id) of the plate locations at once (in one query)
                     loc.in_use_by is not None
-                    and loc.get_user().status in ("in-progress", "waiting", "paused")
+                    and loc.get_user().status in ("in-progress", "waiting", "paused")  # type: ignore
                     for loc in platelocation_source
                 ):
                     await asyncio.sleep(self.sleep_time)

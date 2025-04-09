@@ -1,29 +1,21 @@
 from __future__ import annotations
 
-import os
-import time
-import subprocess
 from typing import TYPE_CHECKING
-import grpc
 import queue
-import threading
 
 if TYPE_CHECKING:
     from device_abc import GeneralizedInput
 
-# import ipc_template_pb2
-# import ipc_template_pb2_grpc
-#from ipc_template_pb2 import ipcConnectionService
-from node_connector_pb2 import ipc_template_pb2,ipc_template_pb2_grpc
+from node_connector_pb2 import ipc_template_pb2, ipc_template_pb2_grpc
 
-###
 
-client_incoming_queues = {} #key = pid,
-client_outgoing_queues = {} #key = pid
+client_incoming_queues = {}  # key = pid,
+client_outgoing_queues = {}  # key = pid
+
 
 class IpcConnectionServicer(ipc_template_pb2_grpc.IpcCommunicationServiceServicer):
     def ReportStatus(self, request_iterator, context):
-        
+
         try:
             for status_update in request_iterator:
                 client_pid = status_update.client_pid
@@ -31,17 +23,17 @@ class IpcConnectionServicer(ipc_template_pb2_grpc.IpcCommunicationServiceService
 
                 print(f"received status_update: {status_message}")
                 client_incoming_queues[client_pid].put(status_message)
-                #TODO do something
+                # TODO do something
         except Exception as e:
             print(f"Error reading from client {e}")
         response = ipc_template_pb2.StatusUpdateResponse()
         return response
-    
+
     def GetCommand(self, request, context):
 
         client_pid = request.client_pid
         print(f"Client {client_pid} connected.")
-        
+
         # Create a dedicated queue for this client's outgoing messages.
         response_queue = queue.Queue()
         update_queue = queue.Queue()
@@ -53,14 +45,13 @@ class IpcConnectionServicer(ipc_template_pb2_grpc.IpcCommunicationServiceService
             print(f"Received from {client_pid}: {request}")
         except Exception as e:
             print(f"Error reading from client {client_pid}: {e}")
-        
+
         # def read_client_messages():
         #     try:
         #         print(f"Received from {client_id}: {request}")
         #     except Exception as e:
         #         print(f"Error reading from client {client_id}: {e}")
 
-        
         try:
             # Main loop: wait for messages in the response queue.
             while True:
@@ -76,22 +67,27 @@ class IpcConnectionServicer(ipc_template_pb2_grpc.IpcCommunicationServiceService
             del client_outgoing_queues[client_pid]
             print(f"Client {client_pid} disconnected.")
 
+
 ###
 
-def send_message_to_client(client_id, general_input:GeneralizedInput):
+
+def send_message_to_client(client_id, general_input: GeneralizedInput):
     """
     Helper function to send a message to a specific client.
     """
     if client_id in client_outgoing_queues:
 
         function_input = generalized_function_input_helper(general_input)
-        response_message = ipc_template_pb2.CommandResponse(FunctionInput=function_input)
+        response_message = ipc_template_pb2.CommandResponse(
+            FunctionInput=function_input
+        )
         client_outgoing_queues[client_id].put(response_message)
         print(f"Sent to {client_id}")
     else:
         print(f"Client {client_id} is not connected.")
 
-def generalized_function_input_helper(general_input:GeneralizedInput):
+
+def generalized_function_input_helper(general_input: GeneralizedInput):
     outgoing_message = ipc_template_pb2.GeneralizedFunctionInput()
 
     outgoing_message.x_position = general_input.x_position
@@ -102,21 +98,3 @@ def generalized_function_input_helper(general_input:GeneralizedInput):
     outgoing_message.sub_function_name = general_input.sub_function_name
 
     return outgoing_message
-
-
-
-
-# while True:
-#     print("64 bit python running")
-    
-
-#     if proc.poll() is None:
-#         print("Subprocess is still running.")
-#         # output, errors = proc.communicate()
-#         # print("Output:", output)
-#         # print("Errors:", errors)
-#     else:
-#         print("Subprocess has terminated.")
-#     time.sleep(1)
-
-

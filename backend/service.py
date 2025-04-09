@@ -1,11 +1,17 @@
 from __future__ import annotations
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import logging
 import sys
 from concurrent import futures
+from os import getenv
+from pathlib import Path
 
 import grpc
 import asyncio
+
 
 from flows.graph import FlowsGraph, Node
 from node_connector_pb2 import (
@@ -22,9 +28,8 @@ from orchestrator import Orchestrator
 
 from python_ipc_servicer import IpcConnectionServicer
 
-logger = logging.getLogger(__name__)
 
-xpeel = XPeel("192.168.0.201", 1628)
+logger = logging.getLogger(__name__)
 
 
 def flowmethod(func):
@@ -73,7 +78,7 @@ def flowmethod(func):
 
 
 class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
-    orchestrator = Orchestrator(xpeel)
+    orchestrator = Orchestrator()
 
     def Ping(self, request, context):
         logger.info(f"Received ping: {request.message}")
@@ -101,6 +106,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
+            request.metadata.instrument_id,
             "status",
             function_args,
         )
@@ -114,6 +120,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
+            request.metadata.instrument_id,
             "reset",
             function_args,
         )
@@ -129,6 +136,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
+            request.metadata.instrument_id,
             "peel",
             function_args,
         )
@@ -142,6 +150,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         msg = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
+            request.metadata.instrument_id,
             "seal_check",
             function_args,
         )
@@ -156,6 +165,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         msg = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
+            request.metadata.instrument_id,
             "tape_remaining",
             function_args,
         )
@@ -168,14 +178,13 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
 
 async def serve():
 
-    await xpeel.connect()
-
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
 
     ncs = NodeConnectorServicer()
+    await ncs.orchestrator.connect_instruments()
     node_connector_pb2_grpc.add_NodeConnectorServicer_to_server(ncs, server)
 
     ipc_template_pb2_grpc.add_IpcCommunicationServiceServicer_to_server(
@@ -194,7 +203,9 @@ async def serve():
 if __name__ == "__main__":
 
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-    graph = FlowsGraph("/home/aquarium/.node-red")
+    graph = FlowsGraph(
+        getenv("NODE_RED_DIR") or Path.joinpath(Path.home(), ".node-red").__str__()
+    )
 
     logger.info(f"Connecting to database")
     logger.info(f"Connected to database")

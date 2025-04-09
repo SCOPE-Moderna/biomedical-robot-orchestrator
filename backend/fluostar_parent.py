@@ -1,10 +1,9 @@
-from device_abc import abstractIPC
+from device_abc import AbstractIPC
 import os
 import subprocess
 
 
-
-class FluostarOmega(abstractIPC):
+class FluostarOmega(AbstractIPC):
     def connect_device(self):
 
         # Replace these paths
@@ -15,7 +14,7 @@ class FluostarOmega(abstractIPC):
 
         # Construct the full path to the 32-bit script
         script_path = os.path.join(current_dir, "python_ipc_32.py")
-        #path_to_script = r"C:\Path\To\your\32bit_script.py"
+        # path_to_script = r"C:\Path\To\your\32bit_script.py"
         try:
             proc = subprocess.Popen([path_to_32bit_python, script_path])
             self.client_pid = proc

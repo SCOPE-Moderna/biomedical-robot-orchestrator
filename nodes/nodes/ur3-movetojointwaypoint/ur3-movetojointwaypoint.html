@@ -8,12 +8,17 @@
         validate: RED.validators.number(false),
         required: true,
       },
+      instrument_id: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
     },
     inputs: 1,
     outputs: 1,
     icon: "arrow-in.svg",
     label: function () {
-      return `UR3: Move to waypoint ${this.waypoint_number}`;
+      return `UR3: Move ${this.instrument_id} to waypoint ${this.waypoint_number}`;
     },
     paletteLabel: "UR3: Move to joint waypoint",
   });
@@ -23,13 +28,24 @@
   <div class="form-row">
     <h1>Waypoint Number</h1>
     <label for="node-input-waypoint_number"
-      ><i class="fa fa-tag"></i>Waypoint Number</label
+      ><i class="fa fa-map-pin"></i> Waypoint Number</label
     >
     <p>
       Waypoint associated with one joint state in the backend. Number must be
       known to the backend.
     </p>
-    <input type="number" id="node-input-waypoint_number" placeholder="1-9" />
+    <input type="number" id="node-input-waypoint_number" placeholder="1" />
+  </div>
+  <div class="form-row">
+    <h1>Instrument ID</h1>
+    <label for="node-input-instrument_id"
+      ><i class="fa fa-id-card-o"></i> Instrument ID</label
+    >
+    <p>
+      ID of the instrument you'd like this node to control. IDs are configured
+      in the database.
+    </p>
+    <input type="number" id="node-input-instrument_id" placeholder="1" />
   </div>
 </script>
 

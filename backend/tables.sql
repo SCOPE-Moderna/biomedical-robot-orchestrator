@@ -36,6 +36,7 @@ CREATE TABLE instruments
     id                SERIAL PRIMARY KEY,
     name              TEXT NOT NULL,
     type              TEXT NOT NULL,
+    enabled           BOOLEAN DEFAULT FALSE,
     connection_method TEXT NOT NULL,
     connection_info   JSONB,
     in_use_by         INTEGER REFERENCES node_runs (id),

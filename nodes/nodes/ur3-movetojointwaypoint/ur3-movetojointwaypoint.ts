@@ -8,6 +8,7 @@ import {
 
 interface UR3MoveToJointWaypointNodeDef extends NodeDef {
   waypoint_number: string;
+  instrument_id: string;
 }
 
 class UR3MoveToJointWaypointNode extends BaseNode<UR3MoveToJointWaypointNodeDef> {

@@ -1,11 +1,11 @@
-import { NodeDef, NodeMessage } from "node-red";
+import { NodeMessage } from "node-red";
 import {
   StartFlowRequest,
   StartFlowResponse,
 } from "../../node_connector_pb2/node_connector";
-import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
+import { BaseNode, BaseNodeDef, OrchestratorMessageInFlow } from "../nodeAPI";
 
-interface StartFlowNodeDef extends NodeDef {
+interface StartFlowNodeDef extends BaseNodeDef {
   flow_name: string;
 }
 

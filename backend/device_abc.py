@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TypedDict, Callable, NotRequired
+import logging
 
 # ABC
 from abc import ABC, abstractmethod
@@ -7,15 +8,21 @@ from abc import ABC, abstractmethod
 # UR3
 import rtde_receive
 import rtde_control
-import rtde_io
 
 # xpeel
 import socket
-from queue import SimpleQueue
+from queue import SimpleQueue, Queue
 from python_ipc_servicer import send_message_to_client
+
+logger = logging.getLogger(__name__)
 
 
 class GeneralizedInput(TypedDict):
+    """
+    GeneralizedInput contains all the possible inputs that can be sent to a device
+    to control it.
+    """
+
     x_position: NotRequired[int]
     y_position: NotRequired[int]
     waypoint_number: NotRequired[int]
@@ -25,10 +32,19 @@ class GeneralizedInput(TypedDict):
 
 
 class AbstractConnector(ABC):
+    """
+    AbstractConnector is the base class for all device connectors.
+
+    It provides a common interface for all connectors and defines the
+    methods that must be implemented by each connector.
+
+    Children must implement connect_device() and all functions to be executed.
+    """
 
     def __init__(self, ip_addr, port):
         self.ip_addr = ip_addr
         self.port = port
+        self.q = Queue()
         self.connect_device()
 
     @abstractmethod
@@ -37,9 +53,8 @@ class AbstractConnector(ABC):
 
     def call_node_interface(self, node_name: str, relevant_data: GeneralizedInput):
         """
-        The method with which the orchestrator will call the robot. It will send an "action" to perform
-
-        # if the node function call has output then it will return it
+        The method with which the orchestrator will call the robot. It will send an "action" to perform.
+        If the node function call has output then it will return it.
         """
 
         node_function: Callable[[AbstractConnector, GeneralizedInput], None] = getattr(
@@ -54,7 +69,11 @@ class AbstractConnector(ABC):
             return None
 
 
-class abstractIPC(AbstractConnector):
+class AbstractIPC(AbstractConnector):
+    """
+    AbstractConnector that uses IPC to connect to the device.
+    """
+
     # OVERWRITE THIS
     client_pid = None
 
@@ -67,6 +86,9 @@ class abstractIPC(AbstractConnector):
 
 
 class UrRobot(AbstractConnector):
+    """
+    Implementation of the UR3 robot as an AbstractConnector.
+    """
 
     waypoint_J1 = [0.0, -1.3, 0.0, -1.3, 0.0, 0.0]
     waypoint_J2 = [
@@ -81,14 +103,14 @@ class UrRobot(AbstractConnector):
 
     # connect device implementation
     def connect_device(self):
-        print("attempting receive interface connection")
+        logger.debug("ur3: attempting receive interface connection")
         self.receive_interface = rtde_receive.RTDEReceiveInterface(self.ip_addr)
 
-        print("attempting control interface connection")
+        logger.debug("ur3: attempting control interface connection")
         self.control_interface = rtde_control.RTDEControlInterface(self.ip_addr)
 
     # specific implementations
-    def retrieve_state_joint(self, general_input: GeneralizedInput):
+    def retrieve_state_joint(self, _: GeneralizedInput):
         return self.receive_interface.getActualQ()
 
     def general_control_call(self, general_input: GeneralizedInput):
@@ -116,21 +138,21 @@ class UrRobot(AbstractConnector):
         return self.receive_interface.getActualTCPPose()
 
     # NODE
-    def move_J_waypoint(self, general_input):
-
-        # target = [0.0, -1.3, 0.0, -1.3, 0.0, 0.0]
-
+    def move_j_waypoint(self, general_input):
         target = self.waypoints[general_input.waypoint_number]
-        print(f"moving to {target}")
+        logger.log(f"ur3: moving to {target}")
         self.control_interface.moveJ(target, True)
 
 
 class XPeelConnector(AbstractConnector):
-    def connect_device(self):
+    def __init__(self, ip_addr, port):
+        super().__init__(ip_addr, port)
         self.sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock_conn.connect((self.ip_addr, self.port))
         self.recv_queue = SimpleQueue()
-        print(f"Connected on {self.ip_addr}:{self.port}!")
+
+    def connect_device(self):
+        self.sock_conn.connect((self.ip_addr, self.port))
+        logger.log(f"XPeel (ABC) Connected on {self.ip_addr}:{self.port}!")
 
     # helper method. not to be directly called
     def send(self, data: str):
@@ -180,37 +202,5 @@ class XPeelConnector(AbstractConnector):
             if msg is not None and "tape" in msg[1:5]:
                 return msg
 
-    # def peel(self, param, adhere):
-    #     self.send(f"*xpeel:{param}{adhere}")
-    #     return self.waive_ack()
-
     def disconnect(self, general_input):
         self.sock_conn.close()
-
-
-# device_ip = "192.168.0.205"
-# my_robot = UR_Robot(device_ip,None)
-
-# print(my_robot.call_node_interface("retrieve_state_joint",None))
-
-# call_input = generalized_input()
-# call_input.waypoint_number =0
-# call_input.string_input = "isSteady"
-
-# my_robot.call_node_interface("move_J_waypoint",call_input)
-
-# if my_robot.call_node_interface("general_control_call",call_input):
-#     print("robot is steady")
-# else:
-#     print("robot is unsteady")
-
-# call_input.waypoint_number = 1
-# my_robot.call_node_interface("move_J_waypoint",call_input)
-call_input: GeneralizedInput = GeneralizedInput({})
-
-xpeel = XPeelConnector("192.168.0.201", 1628)
-print("device connection class created.")
-data = xpeel.call_node_interface("seal_check", call_input)
-print(f"Recieved {data} from xpeel")
-xpeel.call_node_interface("disconnect", call_input)
-print("connection closed.")

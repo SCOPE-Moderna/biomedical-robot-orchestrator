@@ -1,12 +1,12 @@
-import type { NodeMessage, Node, NodeDef } from "node-red";
+import type { NodeMessage } from "node-red";
 import {
   XPeelStatusResponse,
   XPeelXPeelRequest,
 } from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
-import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
+import { BaseNode, BaseNodeDef, OrchestratorMessageInFlow } from "../nodeAPI";
 
-interface XPeelNodeDef extends NodeDef {
+interface XPeelNodeDef extends BaseNodeDef {
   set_number: string;
   adhere_time: string;
 }

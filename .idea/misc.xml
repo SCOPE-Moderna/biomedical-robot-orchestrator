@@ -3,7 +3,7 @@
   <component name="Black">
     <option name="enabledOnReformat" value="true" />
     <option name="enabledOnSave" value="true" />
-    <option name="sdkName" value="Python 3.9 (biomedical-robot-orchestrator)" />
+    <option name="sdkName" value="Python 3.13 (biomedical-robot-orchestrator)" />
   </component>
   <component name="DiscordProjectSettings">
     <option name="show" value="ASK" />

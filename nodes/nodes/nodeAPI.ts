@@ -20,6 +20,16 @@ import type {
 } from "node-red";
 import { RequestMetadata } from "../node_connector_pb2/metadata";
 
+/**
+ * BaseNodeOptions allow some configuration of the BaseNode's
+ * functionality.
+ *
+ * See each option for more information.
+ *
+ * It is VERY important that these options apply to all nodes of this type.
+ * Since options are attached to the definition - NOT instances - they will
+ * be the same for all instances of this node.
+ */
 export interface BaseNodeOptions {
   // whether to check for an orchestrator run ID on input
   // default true
@@ -30,16 +40,44 @@ const DefaultBaseNodeOptions: BaseNodeOptions = {
   checkForRunId: true,
 };
 
+/**
+ * OrchestratorMessageInFlow augments Node-RED's NodeMessageInFlow
+ * with the Orchestrator Run ID.
+ *
+ * It's passed to every BaseNode's onInput function.
+ */
 export interface OrchestratorMessageInFlow extends NodeMessageInFlow {
   __orchestrator_run_id: number;
 }
 
+/**
+ * OrchestratorMessage augments Node-RED's NodeMessage
+ * with the Orchestrator Run ID.
+ */
 export interface OrchestratorMessage extends NodeMessage {
   __orchestrator_run_id: number;
 }
 
+/**
+ * Extend BaseNodeDef for your custom NodeDef types passed
+ * as a type argument to BaseNode.
+ */
+export interface BaseNodeDef extends NodeDef {
+  instrument_id: string;
+}
+
+/**
+ * BaseNode handles all node configuration and assembly into Node-RED.
+ *
+ * It adds the node to Node-RED (`this.node`), and places node config into
+ * `this.config`. It also provides convenience features like a gRPC client
+ * (`this.grpcClient`).
+ *
+ * To use it, instantiate it, override onInput, and export `YourNode.exportable`.
+ * A full code example is documented in the JSDoc for `BaseNode.exportable`.
+ */
 export class BaseNode<
-  TDef extends NodeDef = NodeDef,
+  TDef extends BaseNodeDef = BaseNodeDef,
   TNode extends Node = Node,
 > {
   static type: string;
@@ -54,7 +92,6 @@ export class BaseNode<
   constructor(config: TDef) {
     // @ts-ignore: we must use the constructor to access the RED instance
     // because RED is attached to the subclass' prototype in exportable
-    // @ts-ignore
     this.constructor.RED.nodes.createNode(this as unknown as TNode, config);
     this.node = this as unknown as TNode;
     this.config = config;
@@ -87,6 +124,7 @@ export class BaseNode<
             new RequestMetadata({
               executing_node_id: this.node.id,
               flow_run_id: msg.__orchestrator_run_id,
+              instrument_id: parseInt(this.config.instrument_id),
             }),
           );
 

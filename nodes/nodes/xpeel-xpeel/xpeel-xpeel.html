@@ -11,12 +11,18 @@
         value: "1",
         validate: (input) => !isNaN(input) && input >= 1 && input <= 4,
       },
+      instrument_id: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
     },
-    inputs: 2,
-    // inputLabels: ["Set Number, 1-9", "Adhere Time, 1-4"],
+    inputs: 1,
     outputs: 1,
     icon: "feed.svg",
-    label: "XPeel: XPeel",
+    label: function () {
+      return `(${this.instrument_id}) XPeel: XPeel`;
+    },
     paletteLabel: "XPeel: XPeel",
   });
 </script>
@@ -115,6 +121,17 @@
       </tbody>
     </table>
     <input type="number" id="node-input-adhere_time" placeholder="1-4" />
+  </div>
+  <div class="form-row">
+    <h1>Instrument ID</h1>
+    <label for="node-input-instrument_id"
+      ><i class="fa fa-id-card-o"></i> Instrument ID</label
+    >
+    <p>
+      ID of the instrument you'd like this node to control. IDs are configured
+      in the database.
+    </p>
+    <input type="number" id="node-input-instrument_id" placeholder="1" />
   </div>
 </script>
 

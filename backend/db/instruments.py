@@ -12,10 +12,11 @@ class Instrument:
         name: str,
         type: str,
         connection_method: str,
-        connection_info: str | None,
+        connection_info: dict,
         in_use_by: int | None,
         created_at: dt.datetime,
         updated_at: dt.datetime,
+        enabled: bool,
     ):
         self.id = id
         self.name = name
@@ -25,6 +26,7 @@ class Instrument:
         self.in_use_by = in_use_by
         self.created_at = created_at
         self.updated_at = updated_at
+        self.enabled = enabled
 
     @classmethod
     def fetch_from_id(cls, id: int) -> Instrument:
@@ -32,6 +34,13 @@ class Instrument:
             cur.execute("SELECT * FROM instruments WHERE id = %s", (id,))
             row = cur.fetchone()
             return cls(*row)
+
+    @classmethod
+    def fetch_all(cls) -> list[Instrument]:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM instruments")
+            rows = cur.fetchall()
+            return [cls(*row) for row in rows]
 
     @classmethod
     def create(
@@ -42,9 +51,9 @@ class Instrument:
     ) -> Instrument:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO instruments (name, type, connection_method, created_at, updated_at) "
+                "INSERT INTO instruments (name, type, connection_method, created_at, updated_at, enabled) "
                 "VALUES (%s, %s, %s, %s, %s) "
-                "RETURNING id, name, type, connection_method, connection_info, in_use_by, created_at, updated_at",
+                "RETURNING id, name, type, connection_method, connection_info, in_use_by, created_at, updated_at, enabled",
                 (
                     name,
                     type,
@@ -62,6 +71,7 @@ class Instrument:
                 in_use_by,
                 created_at,
                 updated_at,
+                enabled,
             ] = cur.fetchone()
             return cls(
                 instrument_id,
@@ -72,6 +82,7 @@ class Instrument:
                 in_use_by,
                 created_at,
                 updated_at,
+                enabled,
             )
 
     def set_in_use_by(self, node_run_id: int | None, node_run: NodeRun | None = None):

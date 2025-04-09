@@ -3,13 +3,17 @@
     category: "xpeel",
     color: "#40E0D0",
     defaults: {
-      name: { value: "XPeel Tape Remaining" },
+      instrument_id: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
     },
     inputs: 1,
     outputs: 1,
     icon: "feed.svg",
     label: function () {
-      return this.name || "XPeel: Tape Remaining";
+      return `(${this.instrument_id}) XPeel: Tape Remaining`;
     },
     paletteLabel: "XPeel: Tape Remaining",
   });
@@ -17,8 +21,15 @@
 
 <script type="text/html" data-template-name="xpeel-taperemaining">
   <div class="form-row">
-    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-    <input type="text" id="node-input-name" placeholder="Name" />
+    <h1>Instrument ID</h1>
+    <label for="node-input-instrument_id"
+      ><i class="fa fa-id-card-o"></i> Instrument ID</label
+    >
+    <p>
+      ID of the instrument you'd like this node to control. IDs are configured
+      in the database.
+    </p>
+    <input type="number" id="node-input-instrument_id" placeholder="1" />
   </div>
 </script>
 
