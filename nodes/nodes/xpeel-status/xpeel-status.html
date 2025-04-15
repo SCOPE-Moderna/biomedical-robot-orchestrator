@@ -3,13 +3,17 @@
     category: "xpeel",
     color: "#40E0D0",
     defaults: {
-      name: { value: "XPeel Status" },
+      instrument_id: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
     },
     inputs: 1,
     outputs: 1,
     icon: "feed.svg",
     label: function () {
-      return this.name || "XPeel: Status";
+      return `(${this.instrument_id}) XPeel: Status`;
     },
     paletteLabel: "XPeel: Status",
   });

@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dotenv import load_dotenv
 
+from backend.devices.device_abc import GeneralizedInput
+
 load_dotenv()
 
 import logging
@@ -13,20 +15,20 @@ import grpc
 import asyncio
 
 
-from flows.graph import FlowsGraph, Node
-from node_connector_pb2 import (
+from backend.flows.graph import FlowsGraph
+from backend.node_connector_pb2 import (
     xpeel_pb2,
     node_connector_pb2,
+    ur3_pb2,
     node_connector_pb2_grpc,
     ipc_template_pb2_grpc,
 )
-from xpeel import XPeel
-from db.flow_runs import FlowRun
-from db.conn import conn
+from backend.db.flow_runs import FlowRun
+from backend.db.conn import conn
 
-from orchestrator import Orchestrator
+from backend.orchestrator import Orchestrator
 
-from python_ipc_servicer import IpcConnectionServicer
+from backend.ipc.python_ipc_servicer import IpcConnectionServicer
 
 
 logger = logging.getLogger(__name__)
@@ -141,7 +143,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             function_args,
         )
         logger.info(f"XPeelXPeel response: {result}")
-        return await result.to_xpeel_status_response()
+        return result.to_xpeel_status_response()
 
     async def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")
@@ -175,9 +177,26 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             take_up_spool_space_remaining=int(msg.payload[1]) * 10,
         )
 
+    async def UR3MoveToJointWaypoint(
+        self, request: ur3_pb2.UR3MoveToJointWaypointRequest, context
+    ):
+        logger.info("Received UR3MoveToJointWaypoint request")
+        gi = GeneralizedInput()
+        gi["waypoint_number"] = request.waypoint_number
+        function_args = {"general_input": gi}
+        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        msg = await NodeConnectorServicer.orchestrator.run_node(
+            request.metadata.flow_run_id,
+            request.metadata.executing_node_id,
+            request.metadata.instrument_id,
+            "move_to_joint_waypoint",
+            function_args,
+        )
+        logger.info(f"UR3MoveToJointWaypoint response: {msg}")
+        return ur3_pb2.UR3MoveToJointWaypointResponse(success=True)
+
 
 async def serve():
-
     port = 50051
 
     logger.info(f"Starting gRPC server on port {port}")

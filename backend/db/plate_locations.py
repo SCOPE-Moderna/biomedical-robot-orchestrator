@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .node_runs import NodeRun
-from .conn import conn
+from backend.db.node_runs import NodeRun
+from backend.db.conn import conn
 
 import uuid
 

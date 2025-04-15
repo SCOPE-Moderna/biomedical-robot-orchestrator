@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 
-from .conn import conn
+from backend.db.conn import conn
 
 logger = logging.getLogger(__name__)
 

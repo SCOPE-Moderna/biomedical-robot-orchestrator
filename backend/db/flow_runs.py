@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from .conn import conn
+from backend.db.conn import conn
 
 
 class FlowRun:
@@ -33,7 +33,9 @@ class FlowRun:
             return cls(*row)
 
     @classmethod
-    def create(cls, name: str, start_flow_node_id: str, status="in-progress") -> FlowRun:
+    def create(
+        cls, name: str, start_flow_node_id: str, status="in-progress"
+    ) -> FlowRun:
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO flow_runs (name, status, start_flow_node_id, current_node_id) "

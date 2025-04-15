@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 import queue
 
 if TYPE_CHECKING:
-    from device_abc import GeneralizedInput
+    from backend.devices.device_abc import GeneralizedInput
 
-from node_connector_pb2 import ipc_template_pb2, ipc_template_pb2_grpc
+from backend.node_connector_pb2 import ipc_template_pb2, ipc_template_pb2_grpc
 
 
 client_incoming_queues = {}  # key = pid,

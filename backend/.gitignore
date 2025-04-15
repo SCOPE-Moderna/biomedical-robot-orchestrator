@@ -163,3 +163,4 @@ cython_debug/
 
 node_connector_pb2/
 !node_connector_pb2/*.md
+!node_connector_pb2/__init__.py

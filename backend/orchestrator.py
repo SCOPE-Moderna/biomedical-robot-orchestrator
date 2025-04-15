@@ -1,12 +1,9 @@
 import asyncio
 import logging
-from db.node_runs import NodeRun
-from db.instruments import Instrument
-from db.plate_locations import PlateLocation
-
-# These imports are needed because the orchestrator creates these objects
-from xpeel import XPeel
-from device_abc import UrRobot
+from backend.db.node_runs import NodeRun
+from backend.db.instruments import Instrument
+from backend.db.plate_locations import PlateLocation
+from backend.devices.devices import device_dict
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +18,7 @@ class Orchestrator:
         self.instrument_dict = {}
         for db_instrument in Instrument.fetch_all():
             if db_instrument.enabled is True:
-                class_obj = globals().get(db_instrument.type)
+                class_obj = device_dict[db_instrument.type]
 
                 if class_obj is None:
                     raise ValueError(f"Class '{db_instrument.type}' not found")
@@ -68,7 +65,7 @@ class Orchestrator:
         function_name: str,
         function_args: dict,
         movement=False,
-    ):  # function_name and function_args used for demo
+    ):
         logger.info(f"Running flow {flow_run_id}@{executing_node_id} in orchestrator")
 
         # Using the noderun_id, fetch a NodeRun object
@@ -77,7 +74,7 @@ class Orchestrator:
         # Get the instrument associated with the node
         instrument = self.instrument_dict.get(instrument_id)
         if instrument is None:
-            raise ValueError(f"Invalid instrument: {instrument}")
+            raise ValueError(f"Couldn't find an instrument with ID {instrument}")
 
         # Add node_run_id to instrument queue
         instrument.q.put(noderun.id)
@@ -94,7 +91,9 @@ class Orchestrator:
 
         # Get plate locations associated with this node
         # NOTE: Nodes like XPeel functions that don't move the plates should only have source plate locations
-        platelocation_source = PlateLocation.fetch_from_ids([self.loc_created.id])
+        # TODO: Get the correct plate locations based on the instrument or node
+        # platelocation_source = PlateLocation.fetch_from_ids([self.loc_created.id])
+        platelocation_source = []
         platelocation_destination = []
 
         # Check that source plate locations are filled

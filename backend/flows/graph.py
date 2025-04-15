@@ -7,7 +7,7 @@ from os import path
 from watchdog.events import FileSystemEventHandler, DirMovedEvent, FileMovedEvent
 from watchdog.observers import Observer
 
-from .types import RawNode
+from backend.flows.types import RawNode
 
 # Node types to ignore. Nodes without wires are ignored by default
 IGNORE_NODE_TYPES = {"comment"}

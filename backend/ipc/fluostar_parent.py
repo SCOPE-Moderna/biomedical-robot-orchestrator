@@ -1,4 +1,4 @@
-from device_abc import AbstractIPC
+from backend.devices.device_abc import AbstractIPC
 import os
 import subprocess
 

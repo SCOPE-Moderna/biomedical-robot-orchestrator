@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import json
 
-from .conn import conn
+from backend.db.conn import conn
 
 
 class NodeRun:
