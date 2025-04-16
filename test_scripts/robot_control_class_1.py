@@ -1,6 +1,6 @@
 import rtde_receive
 import rtde_control
-from backend.devices.device_abc import GeneralizedInput
+from backend.devices.device_abc import ABCRobotCommand
 
 
 class UR3_test_controller_1:
@@ -46,7 +46,7 @@ class UR3_test_controller_1:
 
         return general_receive_function(self.control_interface)
 
-    def retrieve_state_linear(self, general_input: GeneralizedInput):
+    def retrieve_state_linear(self, general_input: ABCRobotCommand):
         return self.receive_interface.getActualTCPPose()
 
     def move_J_waypoint(self, general_input):
@@ -80,7 +80,7 @@ my_robot = UR3_test_controller_1()
 
 print(my_robot.call_node_interface("retrieve_state_joint", None))
 
-call_input = GeneralizedInput()
+call_input = ABCRobotCommand()
 call_input.waypoint_number = 0
 call_input.string_input = "isSteady"
 

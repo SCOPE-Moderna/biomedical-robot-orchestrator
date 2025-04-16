@@ -47,4 +47,5 @@ service NodeConnector {
 
   // UR3
   rpc UR3MoveToJointWaypoint (UR3MoveToJointWaypointRequest) returns (UR3MoveToJointWaypointResponse) {}
+  rpc UR3Move (UR3MoveRequest) returns (UR3MoveResponse) {}
 }

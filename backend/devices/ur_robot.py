@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+import logging
+
 import rtde_control
 import rtde_receive
 
-from backend.devices.device_abc import AbstractConnector, logger, GeneralizedInput
+import asyncio
+
+from backend.devices.device_abc import AbstractConnector, ABCRobotCommand
+
+logger = logging.getLogger(__name__)
 
 
 class UrRobot(AbstractConnector):
@@ -58,10 +64,10 @@ class UrRobot(AbstractConnector):
         logger.debug("ur3: attempting interface connections OK")
 
     # specific implementations
-    def retrieve_state_joint(self, _: GeneralizedInput):
+    def retrieve_state_joint(self, _: ABCRobotCommand):
         return self.receive_interface.getActualQ()
 
-    def general_control_call(self, general_input: GeneralizedInput):
+    def general_control_call(self, general_input: ABCRobotCommand):
         # check if this works TODO
         if "string_input" not in general_input:
             raise Exception("No string input provided")
@@ -72,7 +78,7 @@ class UrRobot(AbstractConnector):
 
         return general_control_function(self.control_interface)
 
-    def general_receive_call(self, general_input: GeneralizedInput):
+    def general_receive_call(self, general_input: ABCRobotCommand):
         if "string_input" not in general_input:
             raise Exception("No string input provided")
 
@@ -82,11 +88,27 @@ class UrRobot(AbstractConnector):
 
         return general_receive_function(self.control_interface)
 
-    def retrieve_state_linear(self, general_input: GeneralizedInput):
+    def retrieve_state_linear(self, general_input: ABCRobotCommand):
         return self.receive_interface.getActualTCPPose()
 
     # NODE
-    async def move_to_joint_waypoint(self, general_input):
-        target = self.waypoints[general_input["waypoint_number"]]
-        logger.info(f"ur3: moving to {target}")
-        self.control_interface.moveJ(target, True)
+    async def move_to_joint_waypoint(self, waypoint_number: int):
+        logger.info(f"ur3: moving to waypoint #{waypoint_number}")
+        self.control_interface.moveJ(waypoint_number, True)
+
+    async def move(
+        self,
+        source_waypoint_number: int,
+        destination_waypoint_number: int,
+        delay_between_movements: float,
+    ) -> None:
+        logger.info(f"move: moving to source waypoint {source_waypoint_number}")
+        self.control_interface.moveJ(self.waypoints[source_waypoint_number], True)
+        logger.info(
+            f"move: move to source ({source_waypoint_number}) completed, waiting {delay_between_movements} seconds..."
+        )
+        await asyncio.sleep(delay_between_movements)
+        logger.info(
+            f"move: moving to destination waypoint {destination_waypoint_number}"
+        )
+        self.control_interface.moveJ(self.waypoints[destination_waypoint_number], True)

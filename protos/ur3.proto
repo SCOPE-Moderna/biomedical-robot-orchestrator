@@ -13,3 +13,15 @@ message UR3MoveToJointWaypointResponse {
 
     ResponseMetadata metadata = 100;
 }
+
+message UR3MoveRequest {
+    int32 source_waypoint_number = 1;
+    int32 destination_waypoint_number = 2;
+    float delay_between_movements = 3;
+
+    RequestMetadata metadata = 100;
+}
+
+message UR3MoveResponse {
+    ResponseMetadata metadata = 100;
+}

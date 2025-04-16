@@ -1,0 +1,98 @@
+<script type="text/javascript">
+  RED.nodes.registerType("ur3-move", {
+    category: "ur3",
+    color: "#b8e1e6",
+    defaults: {
+      source_waypoint_number: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
+      destination_waypoint_number: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
+      delay_between_movements: {
+        value: "0.0",
+        validate: RED.validators.number(true),
+        required: false,
+      },
+      instrument_id: {
+        value: "0",
+        validate: RED.validators.number(false),
+        required: true,
+      },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "arrow-in.svg",
+    label: function () {
+      return `UR3: Move ${this.instrument_id} from ${this.source_waypoint_number} to ${this.destination_waypoint_number}`;
+    },
+    paletteLabel: "UR3: Move",
+  });
+</script>
+
+<script type="text/html" data-template-name="ur3-move">
+  <div class="form-row">
+    <label for="node-input-source_waypoint_number"
+      ><i class="fa fa-map-pin"></i> Source Waypoint Number</label
+    >
+    <input
+      type="number"
+      id="node-input-source_waypoint_number"
+      placeholder="1"
+    />
+  </div>
+  <div class="form-row">
+    <label for="node-input-delay_between_movements"
+      ><i class="fa fa-clock-o"></i> Delay Between Movements (optional)</label
+    >
+    <input
+      type="number"
+      id="node-input-delay_between_movements"
+      placeholder="0"
+    />
+  </div>
+  <div class="form-row">
+    <label for="node-input-destination_waypoint_number"
+      ><i class="fa fa-map-pin"></i> Destination Waypoint Number</label
+    >
+    <input
+      type="number"
+      id="node-input-destination_waypoint_number"
+      placeholder="2"
+    />
+  </div>
+  <div class="form-row">
+    <label for="node-input-instrument_id"
+      ><i class="fa fa-id-card-o"></i> Instrument ID</label
+    >
+    <input type="number" id="node-input-instrument_id" placeholder="1" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="ur3-move">
+  <h1>Move a UR3 Robot</h1>
+  <p>
+    This instruction technically contains two moves: one to the source, then
+    another to the destination.
+  </p>
+  <p>
+    Waypoints are indices into the list of waypoints defined in the backend.
+    Since arrays index starting from 0, the 2nd element of the array, for
+    example, would be 1.
+  </p>
+  <h2>Source Waypoint Number</h2>
+  <p>Waypoint number where the robot will move to first.</p>
+  <h2>Destination Waypoint Number</h2>
+  <p>
+    Waypoint number where the robot will move to second, finishing the movement.
+  </p>
+  <h2>Delay Between Movements (Optional)</h2>
+  <p>
+    Delay between the movement to the source waypoint and the destination
+    waypoint, <b>measured in seconds</b>. Floats accepted. Set to 0 to disable.+
+  </p>
+</script>

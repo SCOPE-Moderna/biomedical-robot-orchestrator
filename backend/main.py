@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dotenv import load_dotenv
 
-from backend.devices.device_abc import GeneralizedInput
+from backend.node_connector_pb2.metadata_pb2 import ResponseMetadata
 
 load_dotenv()
 
@@ -104,7 +104,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelStatus(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelStatus request")
         function_args = {}
-        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -118,7 +118,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelReset(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelReset request")
         function_args = {}
-        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -133,7 +133,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(f"Received XPeelXPeel request: {request}")
         function_args = {"param": request.set_number, "adhere": request.adhere_time}
         logger.info(
-            f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}, {function_args}"
+            f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}, {function_args}"
         )
         result = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
@@ -148,7 +148,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")
         function_args = {}
-        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
         msg = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -163,7 +163,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     async def XPeelTapeRemaining(self, request, context):
         logger.info("Received XPeelTapeRemaining request")
         function_args = {}
-        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
         msg = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -181,10 +181,8 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         self, request: ur3_pb2.UR3MoveToJointWaypointRequest, context
     ):
         logger.info("Received UR3MoveToJointWaypoint request")
-        gi = GeneralizedInput()
-        gi["waypoint_number"] = request.waypoint_number
-        function_args = {"general_input": gi}
-        logger.info(f"Fetched excecuting FlowRun ID: {request.metadata.flow_run_id}")
+        function_args = {"waypoint_number": request.waypoint_number}
+        logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
         msg = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
@@ -194,6 +192,26 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         )
         logger.info(f"UR3MoveToJointWaypoint response: {msg}")
         return ur3_pb2.UR3MoveToJointWaypointResponse(success=True)
+
+    async def UR3Move(self, request: ur3_pb2.UR3MoveRequest, context):
+        logger.info("Received UR3Move request")
+
+        function_args = {
+            "source_waypoint_number": request.source_waypoint_number,
+            "destination_waypoint_number": request.destination_waypoint_number,
+            "delay_between_movements": request.delay_between_movements,
+        }
+
+        logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
+        msg = await NodeConnectorServicer.orchestrator.run_node(
+            request.metadata.flow_run_id,
+            request.metadata.executing_node_id,
+            request.metadata.instrument_id,
+            "move",
+            function_args,
+        )
+        logger.info(f"UR3Move response: {msg}")
+        return ur3_pb2.UR3MoveResponse(metadata=ResponseMetadata(success=True))
 
 
 async def serve():

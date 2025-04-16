@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import queue
 
 if TYPE_CHECKING:
-    from backend.devices.device_abc import GeneralizedInput
+    from backend.devices.device_abc import ABCRobotCommand
 
 from backend.node_connector_pb2 import ipc_template_pb2, ipc_template_pb2_grpc
 
@@ -71,7 +71,7 @@ class IpcConnectionServicer(ipc_template_pb2_grpc.IpcCommunicationServiceService
 ###
 
 
-def send_message_to_client(client_id, general_input: GeneralizedInput):
+def send_message_to_client(client_id, general_input: ABCRobotCommand):
     """
     Helper function to send a message to a specific client.
     """
@@ -87,7 +87,7 @@ def send_message_to_client(client_id, general_input: GeneralizedInput):
         print(f"Client {client_id} is not connected.")
 
 
-def generalized_function_input_helper(general_input: GeneralizedInput):
+def generalized_function_input_helper(general_input: ABCRobotCommand):
     outgoing_message = ipc_template_pb2.GeneralizedFunctionInput()
 
     outgoing_message.x_position = general_input.x_position

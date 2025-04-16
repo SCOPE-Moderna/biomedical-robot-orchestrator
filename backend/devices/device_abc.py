@@ -10,9 +10,9 @@ from backend.ipc.python_ipc_servicer import send_message_to_client
 logger = logging.getLogger(__name__)
 
 
-class GeneralizedInput(TypedDict):
+class ABCRobotCommand(TypedDict):
     """
-    GeneralizedInput contains all the possible inputs that can be sent to a device
+    ABCRobotInput contains all the possible inputs that can be sent to a device
     to control it.
     """
 
@@ -43,13 +43,13 @@ class AbstractConnector(ABC):
     def connect_device(self):
         pass
 
-    def call_node_interface(self, node_name: str, relevant_data: GeneralizedInput):
+    def call_node_interface(self, node_name: str, relevant_data: ABCRobotCommand):
         """
         The method with which the orchestrator will call the robot. It will send an "action" to perform.
         If the node function call has output then it will return it.
         """
 
-        node_function: Callable[[AbstractConnector, GeneralizedInput], None] = getattr(
+        node_function: Callable[[AbstractConnector, ABCRobotCommand], None] = getattr(
             self.__class__, node_name
         )
 
@@ -69,9 +69,9 @@ class AbstractIPC(AbstractConnector):
     # OVERWRITE THIS
     client_pid = None
 
-    def call_node_interface(self, node_name, relevant_data: GeneralizedInput):
+    def call_node_interface(self, node_name, command: ABCRobotCommand):
 
         if self.client_pid:
-            send_message_to_client(self.client_pid, relevant_data)
+            send_message_to_client(self.client_pid, command)
         else:
             raise Exception("Invalid client process ID. Did the connection succeed?")

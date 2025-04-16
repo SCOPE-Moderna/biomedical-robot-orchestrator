@@ -24,12 +24,7 @@ message StatusUpdate {
   string status_message = 2;
 }
 
-message StatusUpdateResponse{
-
-}
-
-
-
+message StatusUpdateResponse {}
 
 service IpcCommunicationService {
   // Example method to execute a command

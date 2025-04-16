@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
-from backend.devices.device_abc import AbstractConnector, logger
+from backend.devices.device_abc import AbstractConnector
 from backend.node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
+
+logger = logging.getLogger(__name__)
 
 
 class XPeelConnector(AbstractConnector):
