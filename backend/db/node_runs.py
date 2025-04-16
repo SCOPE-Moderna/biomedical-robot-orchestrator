@@ -69,6 +69,6 @@ class NodeRun:
 
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE node_runs SET status = %s, output_data = %s WHERE id = %s",
+                "UPDATE node_runs SET status = %s, output_data = %s, finished_at = NOW() WHERE id = %s",
                 ("completed", output_data, self.id),
             )

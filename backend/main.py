@@ -8,14 +8,12 @@ load_dotenv()
 import logging
 import sys
 from concurrent import futures
-from os import getenv
-from pathlib import Path
 
 import grpc
 import asyncio
 
 
-from backend.flows.graph import FlowsGraph
+from backend.flows.graph import flows_graph
 from backend.node_connector_pb2 import (
     xpeel_pb2,
     node_connector_pb2,
@@ -62,7 +60,7 @@ def flowmethod(func):
         # TODO: If current node is more than one behind this node, return error
 
         # query graph for current node
-        current_node = graph.get_node(run.current_node_id)
+        current_node = flows_graph.get_node(run.current_node_id)
         next_vestra_node = current_node.next_vestra_node()
 
         if not next_vestra_node:
@@ -238,11 +236,7 @@ async def serve():
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-    graph = FlowsGraph(
-        getenv("NODE_RED_DIR") or Path.joinpath(Path.home(), ".node-red").__str__()
-    )
 
     logger.info(f"Connecting to database")
     logger.info(f"Connected to database")

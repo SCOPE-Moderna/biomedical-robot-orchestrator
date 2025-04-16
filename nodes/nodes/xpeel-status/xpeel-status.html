@@ -1,5 +1,5 @@
 <script type="text/javascript">
-  RED.nodes.registerType("xpeel-status", {
+  RED.nodes.registerType("vestra:xpeel-status", {
     category: "xpeel",
     color: "#40E0D0",
     defaults: {
@@ -19,7 +19,7 @@
   });
 </script>
 
-<script type="text/html" data-template-name="xpeel-status">
+<script type="text/html" data-template-name="vestra:xpeel-status">
   <div class="form-row">
     <h1>Instrument ID</h1>
     <label for="node-input-instrument_id"
@@ -33,7 +33,7 @@
   </div>
 </script>
 
-<script type="text/html" data-help-name="xpeel-status">
+<script type="text/html" data-help-name="vestra:xpeel-status">
   <p>
     Gets status information from the XPeel. Returns an array with the three
     status ints.

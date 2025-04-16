@@ -85,7 +85,7 @@ class FlowRun:
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE flow_runs SET current_node_id = %s, status = %s WHERE id = %s",
-                (current_node_id, self.id),
+                (current_node_id, status, self.id),
             )
         self.current_node_id = current_node_id
         self.status = new_status

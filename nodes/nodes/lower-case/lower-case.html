@@ -1,5 +1,5 @@
 <script type="text/javascript">
-  RED.nodes.registerType("lower-case", {
+  RED.nodes.registerType("vestra:lower-case", {
     category: "custom nodes",
     color: "#CA9258",
     defaults: {
@@ -9,19 +9,19 @@
     outputs: 1,
     icon: "file.svg",
     label: function () {
-      return this.name || "lower-case";
+      return this.name || "vestra:lower-case";
     },
   });
 </script>
 
-<script type="text/html" data-template-name="lower-case">
+<script type="text/html" data-template-name="vestra:lower-case">
   <div class="form-row">
     <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
     <input type="text" id="node-input-name" placeholder="Name" />
   </div>
 </script>
 
-<script type="text/html" data-help-name="lower-case">
+<script type="text/html" data-help-name="vestra:lower-case">
   <p>
     A simple node that converts the message payloads into all lower-case
     characters. Adds 3 exclamation points, too.

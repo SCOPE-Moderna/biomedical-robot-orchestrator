@@ -178,14 +178,15 @@ export class BaseNode<
    * // Export exportable function
    * module.exports = LowercaseNode.exportable("lower-case")
    * ```
-   * @param type {string} The node's type in Node-RED, must be unique
+   * @param type {string} The node's type in Node-RED, must be unique.
+   * `vestra:` will automatically be prepended if necessary.
    * @param options {Partial<BaseNodeOptions>} Options for the node
    */
   static exportable(
     type: string,
     options: Partial<BaseNodeOptions> = DefaultBaseNodeOptions,
   ): (RED: NodeAPI) => void {
-    this.type = type;
+    this.type = type.startsWith("vestra:") ? type : `vestra:${type}`;
     this.options =
       options === DefaultBaseNodeOptions
         ? DefaultBaseNodeOptions

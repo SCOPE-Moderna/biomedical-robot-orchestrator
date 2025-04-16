@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 import json
-from os import path
+from os import path, getenv
+from pathlib import Path
 
 from watchdog.events import FileSystemEventHandler, DirMovedEvent, FileMovedEvent
 from watchdog.observers import Observer
@@ -15,6 +16,7 @@ IGNORE_NODE_TYPES = {"comment"}
 logger = logging.getLogger(__name__)
 
 observer = Observer()
+
 
 class FlowsGraph:
     class FlowsJsonEventListener(FileSystemEventHandler):
@@ -41,7 +43,9 @@ class FlowsGraph:
             json_file = json.load(f)
             self._on_flows_changed(json_file)
         logger.debug(f"no_input_nodes: {self.no_input_nodes}")
-        logger.info(f"Successfully processed flows.json, {len(self.raw_graph)} nodes found")
+        logger.info(
+            f"Successfully processed flows.json, {len(self.raw_graph)} nodes found"
+        )
 
         self.listener = self.FlowsJsonEventListener(self._on_flows_changed)
         observer.schedule(self.listener, path=node_red_dir, recursive=False)
@@ -96,6 +100,7 @@ class FlowsGraph:
     def __repr__(self):
         return f"<FlowsGraph num_nodes={len(self.raw_graph)}, no_input_nodes={self.no_input_nodes}>"
 
+
 class Node:
     def __init__(self, graph: FlowsGraph, raw_node: RawNode):
         self.graph = graph
@@ -107,7 +112,7 @@ class Node:
     def has_wires(self) -> bool:
         return "wires" in self.raw_node and len(self.raw_node["wires"]) > 0
 
-    def next_nodes(self, output_index = 0) -> list[Node] | None:
+    def next_nodes(self, output_index=0) -> list[Node] | None:
         if not self.has_wires:
             return None
 
@@ -115,9 +120,12 @@ class Node:
         if len(output_ids) == 0:
             return None
 
-        return [Node(self.graph, self.graph.raw_graph[output_id]) for output_id in output_ids]
+        return [
+            Node(self.graph, self.graph.raw_graph[output_id])
+            for output_id in output_ids
+        ]
 
-    def next_vestra_node(self, output_index = 0) -> Node | None:
+    def next_vestra_node(self, output_index=0) -> Node | None:
         if not self.has_wires:
             return None
 
@@ -134,7 +142,12 @@ class Node:
 
     @property
     def is_vestra_node(self):
-        return self.node_type.startswith("vestra")
+        return self.node_type.startswith("vestra:")
 
     def __repr__(self) -> str:
         return f"<Node id={self.raw_node['id']} type={self.raw_node['type']}>"
+
+
+flows_graph = FlowsGraph(
+    getenv("NODE_RED_DIR") or Path.joinpath(Path.home(), ".node-red").__str__()
+)

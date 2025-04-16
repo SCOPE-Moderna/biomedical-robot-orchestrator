@@ -1,10 +1,12 @@
 import asyncio
 import logging
-from backend.db.node_runs import NodeRun
+
+from backend.db.flow_runs import FlowRun
 from backend.db.instruments import Instrument
+from backend.db.node_runs import NodeRun
 from backend.db.plate_locations import PlateLocation
 from backend.devices.devices import device_dict
-
+from backend.flows.graph import flows_graph
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,8 @@ class Orchestrator:
 
         # Using the noderun_id, fetch a NodeRun object
         noderun = NodeRun.create(flow_run_id, executing_node_id)
+        flowrun = FlowRun.fetch_from_id(flow_run_id)
+        flowrun.update_node(executing_node_id, "waiting")
 
         # Get the instrument associated with the node
         instrument = self.instrument_dict.get(instrument_id)
@@ -181,6 +185,7 @@ class Orchestrator:
         # Set Node Run status to "in-progress"
         logger.info(f"Setting status of NodeRun {noderun.id} to in-progress")
         noderun.set_status("in-progress")
+        flowrun.update_node(executing_node_id, "in-progress")
 
         # Set source and destination plates to in use by this node
         for loc in platelocation_source:
@@ -190,13 +195,17 @@ class Orchestrator:
 
         # Run function on instrument
         # TODO: Make sure the input is structured correctly
-        function_result = await getattr(instrument, function_name)(
-            **function_args
-        )  # instrument.call_node_interface(node_info['function'], node_info['input_data'])
+        function_result = await getattr(instrument, function_name)(**function_args)
 
         # Complete Node Run
         noderun.complete()
         logger.info(f"NodeRun {noderun.id} completed")
+
+        # If this is the last node in the flow, complete the flow run
+        graph_node = flows_graph.get_node(executing_node_id)
+        if graph_node.next_vestra_node() is None:
+            # Flow run complete
+            flowrun.update_node(executing_node_id, "completed")
 
         if movement is True:
             for loc in platelocation_source:
