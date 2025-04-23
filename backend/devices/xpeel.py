@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TypedDict
 
 from backend.devices.device_abc import AbstractConnector
 from backend.node_connector_pb2.xpeel_pb2 import XPeelStatusResponse
@@ -98,35 +99,56 @@ class XPeelConnector(AbstractConnector):
 
     async def execute_command(
         self, command: str, return_cmd_type: str = "ready"
-    ) -> XPeelMessage:
+    ) -> XPeelMessageDict:
         """
         Send a `command` to the XPeel, and receive a message of `return_cmd_type` back.
         Recommended way to send a command to the XPeel.
         :param command: Command without appended newlines to send to the XPeel.
         :param return_cmd_type: Command type to wait for after sending `command`.
-        :return: XPeelMessage of type `return_cmd_type`.
+        :return: XPeelMessageDict with type `return_cmd_type`.
         """
         logger.debug(
             f"Attempting to execute command of type {return_cmd_type} from XPeel"
         )
         await self.flush_msgs()
         await self.send(command)
-        return await self.recv_type(return_cmd_type)
+        return (await self.recv_type(return_cmd_type)).to_dict()
 
-    async def reset(self) -> XPeelMessage:
+    async def reset(self) -> XPeelMessageDict:
         return await self.execute_command("*reset")
 
-    async def status(self) -> XPeelMessage:
+    async def status(self) -> XPeelMessageDict:
         return await self.execute_command("*stat")
 
-    async def peel(self, param: int, adhere: int) -> XPeelMessage:
+    async def peel(self, param: int, adhere: int) -> XPeelMessageDict:
         return await self.execute_command(f"*xpeel:{param}{adhere}")
 
-    async def seal_check(self) -> XPeelMessage:
+    async def seal_check(self) -> XPeelMessageDict:
         return await self.execute_command("*sealcheck")
 
-    async def tape_remaining(self) -> XPeelMessage:
+    async def tape_remaining(self) -> XPeelMessageDict:
         return await self.execute_command("*tapeleft", "tape")
+
+
+class XPeelMessageDict(TypedDict):
+    raw_msg: str
+    type: str
+    raw_payload: str
+    payload: list[str]
+
+
+def xpeel_message_dict_to_xpeel_status_response(
+    message: XPeelMessageDict,
+) -> XPeelStatusResponse:
+    if message["type"] != "ready":
+        return XPeelStatusResponse(error_code_1=-1, error_code_2=-1, error_code_3=-1)
+    int_payload = [int(x) for x in message["payload"]]
+
+    return XPeelStatusResponse(
+        error_code_1=int_payload[0],
+        error_code_2=int_payload[1],
+        error_code_3=int_payload[2],
+    )
 
 
 class XPeelMessage:
@@ -143,17 +165,13 @@ class XPeelMessage:
             self.raw_payload = ""
             self.payload = []
 
-    def to_xpeel_status_response(self) -> XPeelStatusResponse | None:
-        if self.type != "ready":
-            return XPeelStatusResponse(
-                error_code_1=-1, error_code_2=-1, error_code_3=-1
-            )
-        int_payload = [int(x) for x in self.payload]
-        return XPeelStatusResponse(
-            error_code_1=int_payload[0],
-            error_code_2=int_payload[1],
-            error_code_3=int_payload[2],
-        )
+    def to_dict(self) -> XPeelMessageDict:
+        return {
+            "raw_msg": self.raw_msg,
+            "type": self.type,
+            "raw_payload": self.raw_payload,
+            "payload": self.payload,
+        }
 
     def __repr__(self) -> str:
         return f"<XPeelMessage type={self.type} payload=({self.payload})>"

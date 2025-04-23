@@ -1,42 +1,36 @@
-import type { NodeAPI, Node, NodeMessage, NodeDef } from "node-red";
+import nodeRed, { NodeMessage } from "node-red";
 import {
-  NodeConnectorClient,
   PingRequest,
   PingResponse,
 } from "../../node_connector_pb2/node_connector";
-import * as grpc from "@grpc/grpc-js";
+import { BaseNode } from "../nodeAPI";
 
-interface TestNodeDef extends NodeDef {}
+class GrpcPingNode extends BaseNode {
+  async onInput(msg: nodeRed.NodeMessageInFlow): Promise<NodeMessage[]> {
+    const payload = (msg.payload as string | number).toString();
+    const pingRequest = new PingRequest({ message: payload });
 
-const service = new NodeConnectorClient(
-  "0.0.0.0:50051",
-  grpc.credentials.createInsecure(),
-  undefined,
-);
-
-module.exports = function (RED: NodeAPI) {
-  function GRPCPingNodeConstructor(this: Node, config: TestNodeDef): void {
-    RED.nodes.createNode(this, config);
-
-    this.on("input", async function (msg: NodeMessage, send, done) {
-      const payload = (msg.payload as string | number).toString();
-      const pingRequest = new PingRequest({ message: payload });
-      service.Ping(pingRequest, (error, response) => {
-        if (error) {
-          console.log(error);
-          this.status({ fill: "red", shape: "ring", text: "error occurred." });
-        } else {
-          this.status({
-            fill: "green",
-            shape: "dot",
-            text: "response success.",
-          });
-        }
-        send([{ payload: response.success }, { payload: response.message }]);
-        done();
+    let response: PingResponse;
+    try {
+      response = await this.grpcClient.Ping(pingRequest);
+      this.node.status({
+        fill: "green",
+        shape: "dot",
+        text: response.message,
       });
-    });
-  }
+    } catch (error) {
+      this.node.error(error);
+      this.node.status({
+        fill: "red",
+        shape: "dot",
+        text: error.message,
+      });
+      // this sends TWO messages to the next node!
+      return [{ payload: false }, { payload: error.message }];
+    }
 
-  RED.nodes.registerType("grpc-ping", GRPCPingNodeConstructor);
-};
+    return [{ payload: response.success }, { payload: response.message }];
+  }
+}
+
+module.exports = GrpcPingNode.exportable("grpc-ping", { checkForRunId: false });

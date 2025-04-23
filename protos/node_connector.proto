@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "ui.proto";
 import "metadata.proto";
 import "xpeel.proto";
 import "ur3.proto";
@@ -37,6 +38,9 @@ message Empty {}
 service NodeConnector {
   rpc Ping (PingRequest) returns (PingResponse) {}
   rpc StartFlow (StartFlowRequest) returns (StartFlowResponse) {}
+
+  // Methods intended for the UI
+  rpc GetRunningFlows (GetRunningFlowsRequest) returns (GetRunningFlowsResponse) {}
 
   // XPeel
   rpc XPeelStatus (XPeelGeneralRequest) returns (XPeelStatusResponse) {}

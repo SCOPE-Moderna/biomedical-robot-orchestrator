@@ -77,6 +77,18 @@ which runs in Node.js.
 Before Node-RED starts, we compile all modules, and the bundler (`vite`) will compile all imported code into a single
 file that will run in the browser.
 
+#### Using React
+
+Vestra and its tooling natively supports react. See an example inside the `grpc-ping` node.
+
+To use React inside a node's UI:
+
+1. Move its definition to a `.tsx` file
+2. Add a `<div id="app"></div>` into the Node's UI
+3. Add an `oneditprepare` event that mounts the React root and begins rendering
+4. Add `oneditsave`, `oneditcancel`, and `oneditdelete` events that unmount the React root
+5. Run the node - no other setup is necessary.
+
 #### Using gRPC
 
 To use gRPC in the node definitions, you **must** import from `../../node_connector_web_pb2`, **not** from

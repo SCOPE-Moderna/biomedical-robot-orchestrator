@@ -1,6 +1,10 @@
 from __future__ import annotations
 from dotenv import load_dotenv
 
+from backend.devices.xpeel import (
+    xpeel_message_dict_to_xpeel_status_response,
+    XPeelMessageDict,
+)
 from backend.node_connector_pb2.metadata_pb2 import ResponseMetadata
 
 load_dotenv()
@@ -15,6 +19,7 @@ import asyncio
 
 from backend.flows.graph import flows_graph
 from backend.node_connector_pb2 import (
+    ui_pb2,
     xpeel_pb2,
     node_connector_pb2,
     ur3_pb2,
@@ -32,51 +37,6 @@ from backend.ipc.python_ipc_servicer import IpcConnectionServicer
 logger = logging.getLogger(__name__)
 
 
-def flowmethod(func):
-    async def wrapper(*args, **kwargs):
-        # self = args[0]
-        request: node_connector_pb2.GenericMessageWithRequestMetadata = args[1]
-        # context = args[2]
-
-        # Get FlowRun ID from args
-        # args: self, request, context. we will require that requests have flow_id.
-        if not request.HasField("metadata"):
-            logger.error("Request does not have metadata", request)
-            await func(*args, **kwargs, error="Request does not have metadata")
-            return
-
-        reqMetadata: node_connector_pb2.RequestMetadata = request.metadata
-        run = FlowRun.fetch_from_id(int(reqMetadata.flow_run_id))
-        if run.status != "in-progress":
-            msg = f"FlowRun {run.id} is not running"
-            logger.error(msg)
-            await func(*args, **kwargs, error=msg)
-            return
-
-        # Check placement of current node in flow graph
-        # if run.current_node_id !=
-        # If current node is ahead of this node, skip call
-        # If current node is one before this node, update current node to this node and execute
-        # TODO: If current node is more than one behind this node, return error
-
-        # query graph for current node
-        current_node = flows_graph.get_node(run.current_node_id)
-        next_vestra_node = current_node.next_vestra_node()
-
-        if not next_vestra_node:
-            # end of flow
-            pass
-
-        result: node_connector_pb2.GenericMessageWithResponseMetadata = await func(
-            *args, **kwargs
-        )
-        logger.info(f"{func.__name__} returned: {result}")
-
-        return result
-
-    return wrapper
-
-
 class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
     orchestrator = Orchestrator()
 
@@ -86,10 +46,18 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             message=f"Pong ({request.message})", success=True
         )
 
+    def GetRunningFlows(
+        self, request: ui_pb2.GetRunningFlowsRequest, context
+    ) -> ui_pb2.GetRunningFlowsResponse:
+        flows = FlowRun.query(status="in-progress", order_by="id DESC")
+        proto_flows = [run.to_proto() for run in flows]
+
+        return ui_pb2.GetRunningFlowsResponse(flow_runs=proto_flows)
+
     def StartFlow(self, request: node_connector_pb2.StartFlowRequest, context):
         logger.info("Received StartFlow request")
         run = FlowRun.create(
-            name=request.start_node_id, start_flow_node_id=request.start_node_id
+            name=request.flow_name, start_flow_node_id=request.start_node_id
         )
         logger.info(f"Starting run: {run.id}")
         response = node_connector_pb2.StartFlowResponse(
@@ -98,12 +66,11 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info("Received StartFlow response")
         return response
 
-    @flowmethod
     async def XPeelStatus(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelStatus request")
         function_args = {}
         logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
-        result = await NodeConnectorServicer.orchestrator.run_node(
+        result: XPeelMessageDict = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
             request.metadata.instrument_id,
@@ -111,13 +78,13 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             function_args,
         )
         logger.info(f"XPeelStatus response: {result}")
-        return result.to_xpeel_status_response()
+        return xpeel_message_dict_to_xpeel_status_response(result)
 
     async def XPeelReset(self, request: xpeel_pb2.XPeelGeneralRequest, context):
         logger.info("Received XPeelReset request")
         function_args = {}
         logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
-        result = await NodeConnectorServicer.orchestrator.run_node(
+        result: XPeelMessageDict = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
             request.metadata.instrument_id,
@@ -125,7 +92,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             function_args,
         )
         logger.info(f"XPeelReset response: {result}")
-        return result.to_xpeel_status_response()
+        return xpeel_message_dict_to_xpeel_status_response(result)
 
     async def XPeelXPeel(self, request: xpeel_pb2.XPeelXPeelRequest, context):
         logger.info(f"Received XPeelXPeel request: {request}")
@@ -133,7 +100,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info(
             f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}, {function_args}"
         )
-        result = await NodeConnectorServicer.orchestrator.run_node(
+        result: XPeelMessageDict = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
             request.metadata.instrument_id,
@@ -141,20 +108,20 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             function_args,
         )
         logger.info(f"XPeelXPeel response: {result}")
-        return result.to_xpeel_status_response()
+        return xpeel_message_dict_to_xpeel_status_response(result)
 
     async def XPeelSealCheck(self, request, context):
         logger.info("Received XPeelSealCheck request")
         function_args = {}
         logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
-        msg = await NodeConnectorServicer.orchestrator.run_node(
+        msg: XPeelMessageDict = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
             request.metadata.instrument_id,
             "seal_check",
             function_args,
         )
-        has_seal = msg.type == "ready" and msg.payload[0] == "04"
+        has_seal = msg["type"] == "ready" and msg["payload"][0] == "04"
         logger.info(f"XPeelSealCheck response: {has_seal}")
         return xpeel_pb2.XPeelSealCheckResponse(seal_detected=has_seal)
 
@@ -162,7 +129,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         logger.info("Received XPeelTapeRemaining request")
         function_args = {}
         logger.info(f"Fetched executing FlowRun ID: {request.metadata.flow_run_id}")
-        msg = await NodeConnectorServicer.orchestrator.run_node(
+        msg: XPeelMessageDict = await NodeConnectorServicer.orchestrator.run_node(
             request.metadata.flow_run_id,
             request.metadata.executing_node_id,
             request.metadata.instrument_id,
@@ -171,8 +138,8 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
         )
         logger.info(f"XPeelTapeRemaining response: {msg}")
         return xpeel_pb2.XPeelTapeRemainingResponse(
-            deseals_remaining=int(msg.payload[0]) * 10,
-            take_up_spool_space_remaining=int(msg.payload[1]) * 10,
+            deseals_remaining=int(msg["payload"][0]) * 10,
+            take_up_spool_space_remaining=int(msg["payload"][1]) * 10,
         )
 
     async def UR3MoveToJointWaypoint(
@@ -187,6 +154,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             request.metadata.instrument_id,
             "move_to_joint_waypoint",
             function_args,
+            movement=True,
         )
         logger.info(f"UR3MoveToJointWaypoint response: {msg}")
         return ur3_pb2.UR3MoveToJointWaypointResponse(success=True)
@@ -207,6 +175,7 @@ class NodeConnectorServicer(node_connector_pb2_grpc.NodeConnectorServicer):
             request.metadata.instrument_id,
             "move",
             function_args,
+            movement=True,
         )
         logger.info(f"UR3Move response: {msg}")
         return ur3_pb2.UR3MoveResponse(metadata=ResponseMetadata(success=True))

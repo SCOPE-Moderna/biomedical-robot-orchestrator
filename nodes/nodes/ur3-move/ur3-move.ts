@@ -1,15 +1,7 @@
-import type { NodeMessage, NodeDef } from "node-red";
-import {
-  GenericMessageWithResponseMetadata,
-  RequestMetadata,
-} from "../../node_connector_pb2/metadata";
+import type { NodeMessage } from "node-red";
+import { RequestMetadata } from "../../node_connector_pb2/metadata";
 import { BaseNode, BaseNodeDef, OrchestratorMessageInFlow } from "../nodeAPI";
-import {
-  UR3MoveRequest,
-  UR3MoveResponse,
-  UR3MoveToJointWaypointRequest,
-  UR3MoveToJointWaypointResponse,
-} from "../../node_connector_pb2/ur3";
+import { UR3MoveRequest } from "../../node_connector_pb2/ur3";
 
 interface UR3MoveNodeDef extends BaseNodeDef {
   source_waypoint_number: string;
@@ -43,14 +35,7 @@ class UR3MoveNode extends BaseNode<UR3MoveNodeDef> {
       metadata: requestMetadata,
     });
 
-    const response: UR3MoveResponse = await new Promise((resolve, reject) => {
-      this.grpcClient.UR3Move(request, (error, response) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(response);
-      });
-    });
+    const response = await this.grpcClient.UR3Move(request);
 
     msg.payload = {
       success: response.metadata.success,

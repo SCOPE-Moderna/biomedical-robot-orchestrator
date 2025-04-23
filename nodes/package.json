@@ -18,6 +18,9 @@
     "@types/node": "^22.7.5",
     "@types/node-red": "^1.3.5",
     "@types/pluralize": "^0.0.33",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
     "prettier": "^3.3.3",
     "protoc-gen-ts": "^0.8.7",
     "typescript": "^5.6.3",
@@ -27,12 +30,19 @@
     "format": "prettier --write nodes --ignore-path .gitignore",
     "lint": "prettier --check nodes --ignore-path .gitignore",
     "compile": "vite build && tsc -p .",
-    "protos": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_out=./node_connector_pb2 ../protos/node_connector.proto",
-    "protos-win": "protoc --plugin=\"protoc-gen-ts.cmd=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_out=./node_connector_pb2 ../protos/node_connector.proto"
+    "protos": "yarn protos-node && yarn protos-web",
+    "protos-win": "yarn protos-node-win && yarn protos-web-win",
+    "protos-node": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_opt=unary_rpc_promise=true --ts_opt=target=node --ts_out=./node_connector_pb2 ../protos/node_connector.proto",
+    "protos-node-win": "protoc --plugin=\"protoc-gen-ts.cmd=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_opt=unary_rpc_promise=true --ts_opt=target=node --ts_out=./node_connector_pb2 ../protos/node_connector.proto",
+    "protos-web": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_opt=unary_rpc_promise=true --ts_opt=target=web --ts_out=./node_connector_web_pb2 ../protos/node_connector.proto",
+    "protos-web-win": "protoc --plugin=\"protoc-gen-ts.cmd=./node_modules/.bin/protoc-gen-ts\" -I../protos --ts_opt=esModuleInterop=true --ts_opt=unary_rpc_promise=true --ts_opt=target=web --ts_out=./node_connector_web_pb2 ../protos/node_connector.proto"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.2",
     "google-protobuf": "^3.21.4",
-    "pluralize": "^8.0.0"
+    "grpc-web": "^1.5.0",
+    "pluralize": "^8.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

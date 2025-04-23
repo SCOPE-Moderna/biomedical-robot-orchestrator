@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+message GetRunningFlowsRequest {}
+
+message GetRunningFlowsResponse {
+  repeated FlowRun flow_runs = 1;
+}
+
+message FlowRun {
+  int32 id = 1;
+  string name = 2;
+  string start_flow_node_id = 3;
+  string current_node_id = 4;
+  google.protobuf.Timestamp started_at = 5;
+  string status = 6;
+}
+
+message NodeRun {
+  int32 id = 1;
+  string flow_run_id = 2;
+  string node_id = 3;
+  string input_data = 4;
+  string output_data = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp finished_at = 7;
+  string status = 8;
+}

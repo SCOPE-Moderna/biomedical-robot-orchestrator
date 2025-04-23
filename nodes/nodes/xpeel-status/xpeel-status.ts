@@ -1,16 +1,8 @@
 import type { NodeMessage } from "node-red";
-import {
-  XPeelGeneralRequest,
-  XPeelStatusResponse,
-} from "../../node_connector_pb2/xpeel";
-import { RequestMetadata } from "../../node_connector_pb2/metadata";
 import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
 
 class XPeelStatusNode extends BaseNode {
-  async onInput(
-    msg: OrchestratorMessageInFlow,
-    requestMetadata: RequestMetadata,
-  ): Promise<NodeMessage> {
+  async onInput(msg: OrchestratorMessageInFlow): Promise<NodeMessage> {
     // check if any XPeel device is available - check python xpeel queue
 
     // if no available:
@@ -21,19 +13,7 @@ class XPeelStatusNode extends BaseNode {
     // if available:
     // set xpeel queue to "in-use" & Node-RED status to "connected"
     // this.node.status({ fill: "green", shape: "ring", text: "running." });
-    const response: XPeelStatusResponse = await new Promise(
-      (resolve, reject) => {
-        this.grpcClient.XPeelStatus(
-          new XPeelGeneralRequest({ metadata: requestMetadata }),
-          (error, response) => {
-            if (error) {
-              reject(error);
-            }
-            resolve(response);
-          },
-        );
-      },
-    );
+    const response = await this.grpcClient.XPeelStatusRequest();
 
     msg.payload = [
       response.error_code_1,

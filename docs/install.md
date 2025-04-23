@@ -93,3 +93,14 @@ The Orchestrator requires two environment variables to run:
 - `NODE_RED_DIR`: Path to the Node-RED configuration folder, so it can read your flows from Node-RED. By default, this is `~/.node-red`.
 
 Now, to run the orchestrator, open a terminal in the base directory of this repository and run `make backend` or `python -m backend.main`.
+
+### Running everything in Docker compose
+
+From the root of the repository, you can just run `docker compose up`.
+
+This will build our containers and run them, however the code will be baked in.
+For development, we recommend running locally.
+
+Note that our 32-bit Python IPC implementation does not run in Docker.
+
+When you change your code, run `docker compose build`, then `docker compose up`.

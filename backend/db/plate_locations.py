@@ -36,6 +36,16 @@ class PlateLocation:
             return [cls(*row) for row in rows]
 
     @classmethod
+    def fetch_from_instrument_id(cls, instrument_id: int) -> list[PlateLocation]:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM plate_locations WHERE instrument_id = %s",
+                (instrument_id,),
+            )
+            rows = cur.fetchall()
+            return [cls(*row) for row in rows]
+
+    @classmethod
     def create(
         cls, instrument_id: int, x_capacity: int = 1, y_capacity: int = 1
     ) -> PlateLocation:

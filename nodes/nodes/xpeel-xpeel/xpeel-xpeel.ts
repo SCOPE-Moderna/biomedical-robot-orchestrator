@@ -1,8 +1,5 @@
 import type { NodeMessage } from "node-red";
-import {
-  XPeelStatusResponse,
-  XPeelXPeelRequest,
-} from "../../node_connector_pb2/xpeel";
+import { XPeelXPeelRequest } from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
 import { BaseNode, BaseNodeDef, OrchestratorMessageInFlow } from "../nodeAPI";
 
@@ -29,16 +26,7 @@ class XPeelXPeelNode extends BaseNode<XPeelNodeDef> {
       metadata: requestMetadata,
     });
 
-    const response: XPeelStatusResponse = await new Promise(
-      (resolve, reject) => {
-        this.grpcClient.XPeelXPeel(peelRequest, (error, response) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(response);
-        });
-      },
-    );
+    const response = await this.grpcClient.XPeelXPeel(peelRequest);
 
     msg.payload = [
       response.error_code_1,

@@ -1,0 +1,22 @@
+<script type="module" src="index.tsx"></script>
+<script type="text/html" data-template-name="vestra:view-flows">
+  <div class="form-row">
+    <div id="app"></div>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="vestra:view-flows">
+  <p>Pulls a list of running flows from the database, via the orchestrator.</p>
+  <h2>UI</h2>
+  <p>
+    When double-clicked, the UI will make a gRPC call and display running flows.
+  </p>
+  <p>
+    This is also a demo of using React and gRPC from a node's UI. (Remember, all
+    node UI runs in the browser!)
+  </p>
+  <h2>Execution</h2>
+  <p>
+    When run inside a flow, it returns the list of flows as a JavaScript object.
+  </p>
+</script>

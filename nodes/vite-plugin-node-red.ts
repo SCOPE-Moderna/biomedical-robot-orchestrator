@@ -7,14 +7,12 @@ import { readFile } from "node:fs/promises";
 export interface VitePluginNodeRedOptions {
   packageName?: string;
   nodesDirectory?: string;
-  nodeJsEntrySuffix?: string;
   writePackageJson?: boolean;
 }
 
 const defaultOptions: VitePluginNodeRedOptions = {
   packageName: "nodes",
   nodesDirectory: "nodes",
-  nodeJsEntrySuffix: "_nodejsfile",
   writePackageJson: true,
 };
 
@@ -23,103 +21,21 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
 
   return {
     name: "vite-node-red-plugin",
-    // transform: {
-    //   order: "pre",
-    //   handler: async (code, id) => {
-    //     // Only process HTML files.
-    //     if (!id.endsWith(".html")) return null;
-    //
-    //     let html = code;
-    //     // Regex to match <script> tags with a src attribute.
-    //     // Matches tags like:
-    //     // <script ... type="module" ... src="..."></script>
-    //     const scriptRegex =
-    //       /<script\s+([^>]*?)src\s*=\s*['"]([^'"]+)['"]([^>]*?)>(.*?)<\/script>/g;
-    //     let match;
-    //
-    //     console.log("Processing HTML file:", id);
-    //
-    //     if (
-    //       id ===
-    //       "/Users/sammendelson/Documents/GitHub/biomedical-robot-orchestrator/nodes/nodes/grpc-ping/grpc-ping.html"
-    //     ) {
-    //       console.log("HTML:", html);
-    //     }
-    //     while ((match = scriptRegex.exec(html)) !== null) {
-    //       const [fullMatch, attrBefore, src, attrAfter] = match;
-    //       const combinedAttrs = attrBefore + attrAfter;
-    //
-    //       // Only process tags that have type="module"
-    //       if (!/\btype\s*=\s*['"]module['"]/.test(combinedAttrs)) {
-    //         continue;
-    //       }
-    //
-    //       console.log("Processing script tag with src:", src);
-    //
-    //       // Resolve the file path relative to the current HTML file.
-    //       const filePath = path.resolve(path.dirname(id), src);
-    //       let fileContent;
-    //       try {
-    //         fileContent = await readFile(filePath, "utf8");
-    //       } catch (error) {
-    //         console.error(`Failed to read file at ${filePath}:`, error);
-    //         continue;
-    //       }
-    //
-    //       // Use Vite's transformation pipeline to compile the JS file.
-    //       let transformed;
-    //       try {
-    //         transformed = await transformWithEsbuild(fileContent, filePath);
-    //       } catch (error) {
-    //         console.error(`Error transforming file ${filePath}:`, error);
-    //         transformed = { code: fileContent };
-    //       }
-    //
-    //       const attrs = (attrBefore + attrAfter).replaceAll(
-    //         `type="module"`,
-    //         `type="text/javascript"`,
-    //       );
-    //
-    //       // Create the inline script tag with the transformed code.
-    //       const inlineScriptTag = `<script ${attrs}>${transformed.code}</script>`;
-    //
-    //       // Replace the original <script src="..."> tag with the inline version.
-    //       html = html.replace(fullMatch, inlineScriptTag);
-    //     }
-    //
-    //     return html;
-    //   },
-    // },
-    generateBundle(options, bundle) {
+    generateBundle(_, bundle) {
       Object.entries(bundle).forEach(([fileName, file]) => {
         if (file.type === "chunk" && file.facadeModuleId?.endsWith(".html")) {
           // This is FRONTEND js linked from the HTML
           file.fileName = `resources/${fileName}`;
           return;
         }
-
-        if (
-          file.type === "chunk" &&
-          fileName.endsWith(`${pluginOptions.nodeJsEntrySuffix}.js`)
-        ) {
-          // Find the HTML by removing pluginOptions.nodeJsEntrySuffix from the file name
-          const baseName = fileName
-            .split(".")[0]
-            .replace(pluginOptions.nodeJsEntrySuffix, "");
-
-          const htmlName = `${pluginOptions.nodesDirectory}/${baseName}/${baseName}.html`;
-          if (bundle[htmlName]) {
-            // Rename JS file to match HTML (e.g., about.html → about.js)
-            file.fileName = htmlName.replace(".html", ".js");
-          }
-
-          // Update import path to import from the resources directory (2 levels up)
-          file.code = file.code.replace(
-            /(import\s+[^'"]*['"])([^'"]+\.js)(['"])/g,
-            (match, p1, modulePath, p3) => `${p1}../.${modulePath}${p3}`,
-          );
-        }
       });
+    },
+    transformIndexHtml(html) {
+      console.log(html);
+      return html.replace(
+        /\/resources\/nodes\/resources\//g,
+        "/resources/nodes/",
+      );
     },
     async writeBundle(
       outputOptions: NormalizedOutputOptions,
@@ -140,7 +56,7 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
       };
 
       // Add each output file to package.node_red.nodes
-      for (const [fileName, assetInfo] of Object.entries(bundle)) {
+      for (const [_, assetInfo] of Object.entries(bundle)) {
         if (
           assetInfo.type === "asset" &&
           assetInfo.fileName.endsWith(".html")

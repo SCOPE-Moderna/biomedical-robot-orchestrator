@@ -53,6 +53,9 @@ class UrRobot(AbstractConnector):
         ],
     ]
 
+    # Plate location IDs corresponding to the waypoints defined above
+    plate_locations = ["hotel-1", "hotel-2", "hotel-3", "xpeel-tray", "imaginary-instr"]
+
     # connect device implementation
     async def connect_device(self):
         logger.debug("ur3: attempting receive interface connection")

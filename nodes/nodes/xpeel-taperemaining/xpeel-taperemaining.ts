@@ -1,8 +1,5 @@
 import type { NodeMessage } from "node-red";
-import {
-  XPeelGeneralRequest,
-  XPeelTapeRemainingResponse,
-} from "../../node_connector_pb2/xpeel";
+import { XPeelGeneralRequest } from "../../node_connector_pb2/xpeel";
 import { RequestMetadata } from "../../node_connector_pb2/metadata";
 import { BaseNode, OrchestratorMessageInFlow } from "../nodeAPI";
 
@@ -11,18 +8,8 @@ class XPeelTapeRemainingNode extends BaseNode {
     msg: OrchestratorMessageInFlow,
     requestMetadata: RequestMetadata,
   ): Promise<NodeMessage> {
-    const response: XPeelTapeRemainingResponse = await new Promise(
-      (resolve, reject) => {
-        this.grpcClient.XPeelTapeRemaining(
-          new XPeelGeneralRequest({ metadata: requestMetadata }),
-          (error, response) => {
-            if (error) {
-              reject(error);
-            }
-            resolve(response);
-          },
-        );
-      },
+    const response = await this.grpcClient.XPeelTapeRemaining(
+      new XPeelGeneralRequest({ metadata: requestMetadata }),
     );
 
     msg.payload = {

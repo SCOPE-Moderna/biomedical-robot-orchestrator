@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import json
+from psycopg.types.json import Jsonb
 
 from backend.db.conn import conn
 
@@ -35,6 +36,20 @@ class NodeRun:
             return cls(*row)
 
     @classmethod
+    def fetch_from_flowrun_and_node(cls, flow_run_id: int, node_id: str) -> NodeRun:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM node_runs WHERE flow_run_id = %s AND node_id = %s "
+                # get newest if there are multiple
+                "ORDER BY id DESC",
+                (flow_run_id, node_id),
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return cls(*row)
+
+    @classmethod
     def create(cls, flow_run_id: int, node_id: str, input_data=None) -> NodeRun:
         if input_data is None:
             input_data = {}
@@ -46,7 +61,7 @@ class NodeRun:
                 VALUES (%s, %s, %s)
                 RETURNING *
                 """,
-                (flow_run_id, node_id, json.dumps(input_data)),
+                (flow_run_id, node_id, Jsonb(input_data)),
             )
             row = cur.fetchone()
             return cls(*row)
@@ -70,5 +85,5 @@ class NodeRun:
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE node_runs SET status = %s, output_data = %s, finished_at = NOW() WHERE id = %s",
-                ("completed", output_data, self.id),
+                ("completed", Jsonb(output_data), self.id),
             )

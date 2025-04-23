@@ -1,8 +1,5 @@
 import { NodeMessage } from "node-red";
-import {
-  StartFlowRequest,
-  StartFlowResponse,
-} from "../../node_connector_pb2/node_connector";
+import { StartFlowRequest } from "../../node_connector_pb2/node_connector";
 import { BaseNode, BaseNodeDef, OrchestratorMessageInFlow } from "../nodeAPI";
 
 interface StartFlowNodeDef extends BaseNodeDef {
@@ -28,14 +25,7 @@ class StartFlowNode extends BaseNode<StartFlowNodeDef> {
       flow_name: this.config.flow_name,
     });
 
-    const response: StartFlowResponse = await new Promise((resolve, reject) => {
-      this.grpcClient.StartFlow(startRequest, (error, response) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(response);
-      });
-    });
+    const response = await this.grpcClient.StartFlow(startRequest);
 
     this.node.status({
       fill: "green",
