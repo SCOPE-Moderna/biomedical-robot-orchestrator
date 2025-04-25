@@ -3,9 +3,6 @@ import { defineConfig } from "vite";
 import { readdirSync } from "fs";
 import { resolve } from "path";
 import nodeRedPlugin from "./vite-plugin-node-red";
-import { builtinModules } from "module";
-import react from "@vitejs/plugin-react";
-
 function getEntries(): Record<string, string> {
   const nodesDir = resolve(__dirname, "nodes");
   const entries = {};
@@ -26,6 +23,8 @@ export default defineConfig({
   mode: "production",
   build: {
     emptyOutDir: true,
+    // Enable for better debugging. Also set NODE_ENV=development.
+    // To use a non-inline sourcemap, some plugin changes are required.
     // sourcemap: "inline",
     rollupOptions: {
       // Dynamically generated multi-entry object.
@@ -33,7 +32,10 @@ export default defineConfig({
       output: {
         entryFileNames: "[name]-[hash].js",
       },
+      // DO NOT add @vitejs/plugin-react - it will cause errors with hot reloading,
+      // which isn't designed to work.
       plugins: [nodeRedPlugin()],
+      // May be necessary to exteralize certain modules
       // external: [...builtinModules],
     },
     assetsDir: "resources",

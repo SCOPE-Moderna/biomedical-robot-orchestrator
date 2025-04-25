@@ -23,19 +23,12 @@ export default function nodeRedPlugin(opt = defaultOptions): Plugin {
     name: "vite-node-red-plugin",
     generateBundle(_, bundle) {
       Object.entries(bundle).forEach(([fileName, file]) => {
-        if (file.type === "chunk" && file.facadeModuleId?.endsWith(".html")) {
-          // This is FRONTEND js linked from the HTML
+        if (file.type === "chunk") {
+          // Prepend resources/ to all JS files as they have to go into
+          // the resources/ folder for Node-RED to serve them.
           file.fileName = `resources/${fileName}`;
-          return;
         }
       });
-    },
-    transformIndexHtml(html) {
-      console.log(html);
-      return html.replace(
-        /\/resources\/nodes\/resources\//g,
-        "/resources/nodes/",
-      );
     },
     async writeBundle(
       outputOptions: NormalizedOutputOptions,
