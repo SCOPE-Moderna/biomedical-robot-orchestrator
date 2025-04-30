@@ -4,7 +4,6 @@ import logging
 from backend.db.flow_runs import FlowRun
 from backend.db.instruments import Instrument
 from backend.db.node_runs import NodeRun
-from backend.db.plate_locations import PlateLocation
 from backend.devices.devices import device_dict
 from backend.flows.graph import flows_graph
 
@@ -23,7 +22,7 @@ class Orchestrator:
         """
         This constructor initializes the Orchestrator object and creates instances of all instruments.
         """
-        self.sleep_time = 5  # Set async sleep time to 5 seconds
+        self.sleep_time = 1  # Set async sleep time to 5 seconds
 
         self.instrument_dict = {}  # Dictionary to hold instrument instances
         for (
@@ -169,109 +168,10 @@ class Orchestrator:
             await asyncio.sleep(self.sleep_time)
             db_instrument = Instrument.fetch_from_id(instrument_id)
 
-        # Get plate locations associated with this node
-        # Initialize empty source and destination plate location lists
-        platelocation_source = []
-        platelocation_destination = []
-
-        # If this node is an arm movement
-        if movement is True:
-            if "source_waypoint_number" in function_args:
-                loc_id = instrument.plate_locations[
-                    function_args["source_waypoint_number"]
-                ]
-                platelocation_source = PlateLocation.fetch_from_ids([loc_id])
-            if "destination_waypoint_number" in function_args:
-                loc_id = instrument.plate_locations[
-                    function_args["destination_waypoint_number"]
-                ]
-                platelocation_destination = PlateLocation.fetch_from_ids([loc_id])
-
-        # If this node executes without movement
-        else:
-            # Fetch plate location from instrument ID
-            platelocation_source = PlateLocation.fetch_from_instrument_id(
-                db_instrument.id
-            )
-
-        # Check that source plate locations are filled
-        while True:
-
-            # Track number of actively used plate locations
-            source_in_progress_count = 0
-            destination_in_progress_count = 0
-
-            # For each source plate location
-            for loc in platelocation_source:
-                # If the plate location has never been used or if it was used but the operation is complete
-                # NOTE: allowing an empty plate location to be considered "filled" could cause strange behavior.
-                # This functionality is allowed in order to be flexible for starting flows and pausing/restarting.
-                user = loc.get_user()
-                if user is None or user.status == "completed":
-                    continue
-                # If the plate location has was used by a node that failed
-                elif user.status == "failed":
-                    raise ValueError(
-                        f"Status failed in node {loc.in_use_by} detected at plate location {loc}"
-                    )
-
-                # If the location is actively in use
-                elif user.status in ("in-progress", "waiting", "paused"):
-                    source_in_progress_count += 1
-
-                else:
-                    raise ValueError(
-                        f"Unrecognized status {user.status} in node {loc.in_use_by}"
-                    )
-
-            # For each destination plate location
-            for loc in platelocation_destination:
-                user = loc.get_user()
-                if user is None:  # If destination location is empty
-                    continue
-                elif user.status == "failed":
-                    raise ValueError(
-                        f"Status failed in node {loc.in_use_by} detected at plate location {loc}"
-                    )
-                elif user.status in (
-                    "completed",
-                    "in-progress",
-                    "waiting",
-                    "paused",
-                ):
-                    destination_in_progress_count += 1
-                else:
-                    raise ValueError(
-                        f"Unrecognized status {user.status} in node {loc.in_use_by}"
-                    )
-
-            # If any of the plate locations were being used, wait for them to no longer be in use
-            if source_in_progress_count > 0:
-                while any(
-                    loc.get_user() is not None and loc.get_user().status != "completed"
-                    for loc in platelocation_source
-                ):
-                    await asyncio.sleep(self.sleep_time)
-                    logger.info("Waiting for source plate locations to be filled")
-            elif destination_in_progress_count > 0:
-                while any(
-                    loc.get_user() is not None for loc in platelocation_destination
-                ):
-                    await asyncio.sleep(self.sleep_time)
-                    logger.info("Waiting for destination plate locations to clear up")
-            else:
-                break
-
         # Set Node Run status to "in-progress"
         logger.info(f"Setting status of NodeRun {noderun.id} to in-progress")
         noderun.set_status("in-progress")
         flowrun.update_node(executing_node_id, "in-progress")
-
-        # Set source and destination plates to in use by this node
-        for loc in platelocation_source:
-            loc.set_in_use_by(noderun.id)
-        for loc in platelocation_destination:
-            loc.set_in_use_by(noderun.id)
 
         # Run function on instrument
         function_result = await getattr(instrument, function_name)(**function_args)
@@ -285,10 +185,5 @@ class Orchestrator:
         if graph_node.next_vestra_node() is None:
             # Flow run complete
             flowrun.update_node(executing_node_id, "completed")
-
-        # Clear the source plate locations if this node type is a movement
-        if movement is True:
-            for loc in platelocation_source:
-                loc.set_in_use_by(None)
 
         return function_result
